@@ -24,8 +24,6 @@ class Renderer
 	IDXGIAdapter* m_DXGIAdapter = nullptr;
 	IDXGIFactory* m_DXGIFactory = nullptr;
 	IDXGISwapChain* m_SwapChain = nullptr;
-
-	D3D_FEATURE_LEVEL m_FeatureLevel;
 public:
 	Renderer();
 	~Renderer();
