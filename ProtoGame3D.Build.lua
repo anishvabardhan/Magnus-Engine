@@ -25,7 +25,10 @@ project "ProtoGame3D"
 
     links 
     {
-        "Engine"
+        "Engine",
+        "d3d11.lib",
+        "dxgi.lib",
+        "d3dcompiler.lib"
     }
 
     filter "system:windows"

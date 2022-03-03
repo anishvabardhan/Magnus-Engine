@@ -39,7 +39,7 @@ ShaderDefinition::~ShaderDefinition()
 
 XMLElement* ShaderDefinition::InitializeDef(const String& path)
 {
-	XMLDocument* doc = new XMLDocument();
+	XMLDoc* doc = new XMLDoc();
 	doc->LoadFile(path.c_str());
 
 	XMLElement* root = doc->FirstChildElement();

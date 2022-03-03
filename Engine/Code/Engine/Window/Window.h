@@ -21,9 +21,6 @@ public:
 	bool IsAppQuiting();
 
 	inline void* GetHandle() const { return m_Hwnd; }
-	inline void* GetDeviceContext() const { return m_OurWindowHandleToDeviceContext; }
-	inline void* GetRenderContext() const { return m_OurWindowHandleToRenderContext; }
-
 	inline InputSystem* GetInputSystem() const { return m_InputSystem; }
 	inline void SetInputSystem(InputSystem* inputSystem) { m_InputSystem = inputSystem; }
 
@@ -32,9 +29,6 @@ public:
 	static Window* GetInstance();
 protected:
 	void* m_Hwnd = nullptr;
-	void* m_OurWindowHandleToDeviceContext = nullptr;
-	void* m_OurWindowHandleToRenderContext = nullptr;
-
 	bool m_IsQuitting = false;
 public:
 	bool GetMouse[256];

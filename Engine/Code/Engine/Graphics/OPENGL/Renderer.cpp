@@ -14,6 +14,7 @@
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Core/LogMessage.h"
 #include "External/stb_image.h"
+#include "..\DIRECTX11\Renderer.h"
 
 Renderer* g_Renderer = nullptr;
 

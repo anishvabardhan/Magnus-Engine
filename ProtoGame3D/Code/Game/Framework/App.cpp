@@ -32,12 +32,13 @@ void App::Startup()
 	g_InputSystem->Startup();
 
 	g_Window = new Window();
-	g_Window->Init("ProtoGame2D", CLIENT_DIMS);
+	g_Window->Init("ProtoGame3D", CLIENT_DIMS);
 	g_Window->SetInputSystem(g_InputSystem);
 
 	LogStartup();
 	
 	g_Renderer = new Renderer();
+	g_Renderer->StartUp();
 
 	m_Time = new Time(60);
 
@@ -93,8 +94,8 @@ void App::Shutdown()
 	    m_Game = nullptr;
 	}
 	
-	//g_Renderer->ShutDown();
-	//SAFE_DELETE_POINTER(g_Renderer)
+	g_Renderer->ShutDown();
+	SAFE_DELETE_POINTER(g_Renderer)
 
 	LogShutdown();
 

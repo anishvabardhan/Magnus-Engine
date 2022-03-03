@@ -24,6 +24,6 @@ namespace tinyxml2
 }
 
 using XMLElement = tinyxml2::XMLElement;
-using XMLDocument = tinyxml2::XMLDocument;
+using XMLDoc = tinyxml2::XMLDocument;
 using String = std::string;
 using Strings = std::vector<std::string>;

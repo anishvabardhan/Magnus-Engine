@@ -2,20 +2,30 @@
 
 #if DX11_API
 
+#include <d3d11.h>
+
 #include "Engine/Core/CoreIncludes.h"
+
+
+#define SAFE_RELEASE(ptr) if(ptr != nullptr) {ptr->Release(); ptr = nullptr;}
+#define DEBUG_LAYER 0
+
 
 class Texture;
 class Font;
 class FrameBuffer;
 struct Mesh;
 
-extern void* m_OurWindowHandleToDeviceContext;
-extern void* m_OurWindowHandleToRenderContext;
-
-// TODO First thing: Link DX libs/dll through premake, then create device and swap chain. Read on RenderTargets.
-
 class Renderer
 {
+	ID3D11Device* m_Device = nullptr;
+	ID3D11DeviceContext* m_Context = nullptr;
+
+	IDXGIAdapter* m_DXGIAdapter = nullptr;
+	IDXGIFactory* m_DXGIFactory = nullptr;
+	IDXGISwapChain* m_SwapChain = nullptr;
+
+	D3D_FEATURE_LEVEL m_FeatureLevel;
 public:
 	Renderer();
 	~Renderer();
@@ -23,11 +33,11 @@ public:
 	void StartUp();
 	void ShutDown();
 
-	void SwappingBuffers();
+	void CreateDevice();
+	void CreatSwapChain();
+	void Present(UINT vsync);
 
-	bool MakeContextCurrent(void* hdc, void* hglrc);
-	void CreateOldRenderContext(void* hdc);
-	void CreateRealRenderContext(void* hdc, int major, int minor);
+	void SwappingBuffers();
 
 	void BindDefaultShader();
 	void BindFont(const Font* font, int textureSlot);
@@ -38,7 +48,7 @@ public:
 	void SetModelTranslation(const Mat4& transform = Mat4::Identity());
 
 	void CopyFrameBuffer(FrameBuffer* current, FrameBuffer* next);
-	void Clear() const;
+
 	void ClearColor(const Vec4& color = Color::CLEAR_COLOR) const;
 	
 	// DRAW CALL METHODS

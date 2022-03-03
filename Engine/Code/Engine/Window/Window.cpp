@@ -9,7 +9,7 @@ Window* g_Window = nullptr;
 extern InputSystem* g_InputSystem;
 
 Window::Window()
-	: m_Hwnd(NULL), m_OurWindowHandleToDeviceContext(NULL), m_OurWindowHandleToRenderContext(NULL)
+	: m_Hwnd(NULL)
 {
 }
 
