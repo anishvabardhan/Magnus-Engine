@@ -35,7 +35,7 @@ void MeshBuilder::Vert(const VertexMaster& master)
 }
 
 template <typename FORMAT>
-Mesh* MeshBuilder::CreateMesh()
+Mesh* MeshBuilder::CreateMesh(void* shaderByteCode, size_t shaderByteSize)
 {
 	size_t size = m_Vertices.size();
 	FORMAT* temp = new FORMAT[sizeof(FORMAT) * size]; 
@@ -52,10 +52,9 @@ Mesh* MeshBuilder::CreateMesh()
 		m_Vertices.pop_back();
 	}
 
-	mesh = new Mesh(temp, &FORMAT::m_Layout);
+	mesh = new Mesh(temp, shaderByteCode, shaderByteSize);
 	
-	delete[] temp;
-	temp = nullptr;
+	SAFE_DELETE_POINTER(temp)
 
 	return mesh;
 }

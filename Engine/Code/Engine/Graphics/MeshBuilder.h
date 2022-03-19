@@ -20,7 +20,7 @@ struct MeshBuilder
 	void Vert(const VertexMaster& master);
 
 	template<typename FORMAT>
-	Mesh* CreateMesh();
+	Mesh* CreateMesh(void* shaderByteCode, size_t shaderByteSize);
 };
 
-template Mesh* MeshBuilder::CreateMesh<VertexPCU>();
+template Mesh* MeshBuilder::CreateMesh<VertexPCU>(void* shaderByteCode, size_t shaderByteSize);

@@ -6,24 +6,32 @@
 
 #include "Engine/Core/CoreIncludes.h"
 
-
 #define SAFE_RELEASE(ptr) if(ptr != nullptr) {ptr->Release(); ptr = nullptr;}
-#define DEBUG_LAYER 0
-
 
 class Texture;
 class Font;
 class FrameBuffer;
-struct Mesh;
+class VertexShader;
+class PixelShader;
+class VertexBuffer;
+class IndexBuffer;
+class MeshBuilder;
 
 class Renderer
 {
 	ID3D11Device* m_Device = nullptr;
 	ID3D11DeviceContext* m_Context = nullptr;
+	ID3D11RenderTargetView* m_RenderTargetView = nullptr;
 
-	IDXGIAdapter* m_DXGIAdapter = nullptr;
-	IDXGIFactory* m_DXGIFactory = nullptr;
 	IDXGISwapChain* m_SwapChain = nullptr;
+
+	VertexShader* m_VS = nullptr;
+	PixelShader* m_PS = nullptr;
+
+	VertexBuffer* m_VB = nullptr;
+	IndexBuffer* m_IB = nullptr;
+
+	MeshBuilder* m_MB = nullptr;
 public:
 	Renderer();
 	~Renderer();
@@ -31,9 +39,10 @@ public:
 	void StartUp();
 	void ShutDown();
 
-	void CreateDevice();
-	void CreatSwapChain();
+	void CreateDeviceAndSwapChain();
 	void Present(UINT vsync);
+	void SetRenderTarget();
+	void SetViewport();
 
 	void SwappingBuffers();
 
@@ -58,8 +67,12 @@ public:
 	void DrawDisc(const Vec2& center, const float& radius, const Vec4& color);
 
 	void DrawRing(const Vec2& center, const float& radius, const Vec4& color);
-	void DrawMesh(Mesh* mesh);
+	void DrawMesh();
+
+	ID3D11Device* GetDevice() const;
+	ID3D11DeviceContext* GetContext() const;
 };
 
 extern Renderer* g_Renderer;
+
 #endif
