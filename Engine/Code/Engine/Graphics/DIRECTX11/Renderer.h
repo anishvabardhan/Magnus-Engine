@@ -1,4 +1,5 @@
 #pragma once
+#include "Shader.h"
 
 #if DX11_API
 
@@ -15,23 +16,26 @@ class VertexShader;
 class PixelShader;
 class VertexBuffer;
 class IndexBuffer;
-class MeshBuilder;
+struct MeshBuilder;
+struct Mesh;
+class Shader;
 
 class Renderer
 {
 	ID3D11Device* m_Device = nullptr;
 	ID3D11DeviceContext* m_Context = nullptr;
 	ID3D11RenderTargetView* m_RenderTargetView = nullptr;
+	ID3D11InputLayout* m_Layout = nullptr;
 
 	IDXGISwapChain* m_SwapChain = nullptr;
 
 	VertexShader* m_VS = nullptr;
 	PixelShader* m_PS = nullptr;
 
+	Shader* m_Shader = nullptr;
+
 	VertexBuffer* m_VB = nullptr;
 	IndexBuffer* m_IB = nullptr;
-
-	MeshBuilder* m_MB = nullptr;
 public:
 	Renderer();
 	~Renderer();
@@ -65,12 +69,15 @@ public:
 	void DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color);
 	void DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color);
 	void DrawDisc(const Vec2& center, const float& radius, const Vec4& color);
-
 	void DrawRing(const Vec2& center, const float& radius, const Vec4& color);
-	void DrawMesh();
+
+	void DrawMesh(Mesh* mesh);
 
 	ID3D11Device* GetDevice() const;
 	ID3D11DeviceContext* GetContext() const;
+
+	void* GetShaderByteCode() { return m_VS->m_Blob->GetBufferPointer(); }
+	size_t GetShaderByteSize() { return m_VS->m_Blob->GetBufferSize(); }
 };
 
 extern Renderer* g_Renderer;

@@ -1,0 +1,6 @@
+#include "HeaderShader.msf"
+
+float4 psmain(PSInput input) : SV_TARGET
+{
+	return input.color;
+}

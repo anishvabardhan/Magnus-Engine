@@ -1,7 +1,8 @@
 #include "MeshBuilder.h"
 
 #include "Mesh.h"
-#include "Vertex.h"
+
+MeshBuilder* g_MB = nullptr;
 
 MeshBuilder::MeshBuilder()
 {
@@ -11,50 +12,26 @@ MeshBuilder::~MeshBuilder()
 {
 }
 
-void MeshBuilder::Color3f(Vec4 color)
-{
-	m_Color = color;
-}
-
-void MeshBuilder::TexCoord2f(Vec2 uv)
-{
-	m_VertMast.m_UV = uv;
-}
-
-void MeshBuilder::Position3f(Vec3 position)
-{
-	m_VertMast.m_Color = m_Color;
-	m_VertMast.m_Pos = position;
-	
-	m_Vertices.push_back(m_VertMast);
-}
-
-void MeshBuilder::Vert(const VertexMaster& master)
-{
-	m_Vertices.emplace_back(master);
-}
-
 template <typename FORMAT>
-Mesh* MeshBuilder::CreateMesh(void* shaderByteCode, size_t shaderByteSize)
+Mesh* MeshBuilder::CreateMesh(uint32_t indices)
 {
+	Mesh* mesh = new Mesh();
+
 	size_t size = m_Vertices.size();
 	FORMAT* temp = new FORMAT[sizeof(FORMAT) * size]; 
-
-	Mesh* mesh = nullptr;
 
 	for(size_t index = 0; index < size; index++)
 	{
 		temp[index] = FORMAT(m_Vertices[index]);
 	}
 
+	mesh->m_Indices = indices;
+	mesh->CopyToGPU(temp, (uint32_t)size * 9 * sizeof(float), &FORMAT::m_Layout);
+
 	while(!m_Vertices.empty())
 	{
 		m_Vertices.pop_back();
 	}
-
-	mesh = new Mesh(temp, shaderByteCode, shaderByteSize);
-	
-	SAFE_DELETE_POINTER(temp)
 
 	return mesh;
 }

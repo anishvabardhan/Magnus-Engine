@@ -51,7 +51,17 @@ void Game::Render()
 {
 	g_Renderer->ClearColor(Vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-	g_Renderer->DrawMesh();
+	Vec2 start = Vec2(-0.5f, -0.5f);
+	Vec2 end = Vec2(0.5f, 0.5f);
+	
+	Vec2 start2 = Vec2(0.5f, -0.5f);
+	Vec2 end2 = Vec2(-0.5f, 0.5f);
+
+	g_Renderer->DrawDisc(Vec2(0.0f, 0.0f), 0.05f, Color::RED);
+	//g_Renderer->DrawHollowAABB2(AABB2(Vec2(-0.6f,-0.6f), Vec2( 0.6f, 0.6f)), 0.05f, Color::RED);
+	//g_Renderer->DrawAABB2(AABB2(Vec2(-0.5f,-0.5f), Vec2( 0.5f, 0.5f)), Color::GREEN);
+	//g_Renderer->DrawLine(start, end, 0.01f, Color::BLUE);
+	//g_Renderer->DrawArrow(start2, end2, 0.01f, Color::YELLOW);
 }
 
 //--------------------------------------------------------------------------------------------------

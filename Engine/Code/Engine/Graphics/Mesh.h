@@ -1,17 +1,25 @@
 #pragma once
 
+#include <d3d11.h>
+
+#include "Engine/Core/CoreIncludes.h"
+
 class VertexBuffer;
 class IndexBuffer;
+struct VertexBufferLayout;
 
 struct Mesh
 {
-	int m_Indices = 6;
+	ID3D11InputLayout* m_Layout = nullptr;
+	D3D11_INPUT_ELEMENT_DESC m_Attribs[2];
+
 	VertexBuffer* m_VBO = nullptr;
-	const void* m_Data = nullptr;
 	IndexBuffer* m_IBO = nullptr;
 
-	Mesh(const void* data, void* shaderByteCode, size_t shaderByteSize);
+	uint32_t m_Indices = 6;
+
+	Mesh();
 	~Mesh();
 
-	void CopyToGPU(void* shaderByteCode, size_t shaderByteSize);
+	void CopyToGPU(const void* data, uint32_t arraySize, VertexBufferLayout* layout);
 };

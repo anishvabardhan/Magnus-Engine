@@ -1,20 +1,19 @@
 ﻿#include "Vertex.h"
 
 std::vector<VertexBufferElement> VertexPCU::m_Attributes = {
-	VertexBufferElement(APEX_FLOAT, 3, false),
-	VertexBufferElement(APEX_FLOAT, 4, false),
-	VertexBufferElement(APEX_FLOAT, 2, false)
+	VertexBufferElement("POSITION", MAGNUS_FORMAT_3_FLOAT, offsetof(VertexPCU, m_Pos)),
+	VertexBufferElement("COLOR", MAGNUS_FORMAT_4_FLOAT, offsetof(VertexPCU, m_Color))
 };
 
-VertexBufferLayout VertexPCU::m_Layout(VertexPCU::m_Attributes, sizeof(VertexPCU));
+VertexBufferLayout VertexPCU::m_Layout(VertexPCU::m_Attributes);
 
-VertexBufferLayout::VertexBufferLayout(const std::vector<VertexBufferElement> element, unsigned int stride)
-	: m_Element(element), m_Stride(stride)
+VertexBufferLayout::VertexBufferLayout(const std::vector<VertexBufferElement> element)
+	: m_Element(element)
 {
 }
 
-VertexBufferElement::VertexBufferElement(unsigned int type, unsigned int count, unsigned char normalized)
-	: m_Type(type), m_ElementCount(count), m_Normalized(normalized)
+VertexBufferElement::VertexBufferElement(std::string semanticName, MAGNUS_FORMAT format, unsigned int alignedOffset)
+	: m_SemanticName(semanticName), m_Format(format), m_AlignedOffset(alignedOffset)
 {
 }
 

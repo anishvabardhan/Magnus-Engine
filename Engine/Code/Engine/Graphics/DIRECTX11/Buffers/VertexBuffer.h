@@ -8,7 +8,6 @@
 
 class VertexBuffer
 {
-	ID3D11InputLayout* m_Layout = nullptr;
 	ID3D11Buffer* m_Buffer = nullptr;
 
 	uint32_t m_VertexSize;
@@ -16,7 +15,7 @@ public:
 	VertexBuffer();
 	~VertexBuffer();
 
-	void Load(const void* data, uint32_t vertexSize, uint32_t arraySize, void* shaderByteCode, size_t shaderByteSize);
+	void Load(const void* data, uint32_t vertexSize, uint32_t arraySize);
 	void Bind();
 	void Release();
 };

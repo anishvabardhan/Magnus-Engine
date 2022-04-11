@@ -1,0 +1,10 @@
+#include "HeaderShader.msf"
+
+VSOutput vsmain(VSInput input)
+{
+	VSOutput output;
+	output.outPos = float4(input.inPosition, 1.0f);
+	output.outColor = input.inColor;
+
+	return output;
+}

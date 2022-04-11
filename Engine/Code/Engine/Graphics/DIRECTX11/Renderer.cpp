@@ -6,22 +6,27 @@
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Core/LogMessage.h"
 #include "Shader.h"
+#include "Engine/Graphics/Mesh.h"
+#include "Engine/Graphics/MeshBuilder.h"
 #include "Buffers/VertexBuffer.h"
 #include "Buffers/IndexBuffer.h"
-#include "Engine/Graphics/MeshBuilder.h"
 
-#define DEBUG_LAYER 0
+#define DEBUG_LAYER 1
 
 Renderer* g_Renderer = nullptr;
 
+// todo look up debug names id3d resources
+// todo swap chain flip discard
+// todo finish implementation of all drawcalls
+// todo get rid of all warnings
+// todo read render targets
+
 Renderer::Renderer()
 {
-
 }
 
 Renderer::~Renderer()
 {
- 
 }
 
 void Renderer::StartUp()
@@ -29,10 +34,12 @@ void Renderer::StartUp()
 	CreateDeviceAndSwapChain();
 	SetRenderTarget();
 	SetViewport();
-	
+
+	//m_Shader = new Shader();
+
 	m_VS = new VertexShader();
 	m_PS = new PixelShader();
-
+	
 	m_VS->CompileShader(MAGNUS_VERTEX_SHADER, "vsmain", MAGNUS_VERTEX_SHADER_VER);
 	m_VS->CreateShader();
 	m_VS->LoadShader();
@@ -44,25 +51,8 @@ void Renderer::StartUp()
 	m_VB = new VertexBuffer();
 	m_IB = new IndexBuffer();
 
-	const float vertices[] =
-	{
-		-0.5f,-0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, //0
-		-0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, //1
-		 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, //2
-		 0.5f,-0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f //3
-	};
+	g_MB = new MeshBuilder();
 
-	const unsigned int indices[] =
-	{
-		0, 1, 2,
-		2, 3, 0
-	};
-
-	m_VB->Load(vertices, 9, sizeof(vertices), m_VS->m_Blob->GetBufferPointer(), m_VS->m_Blob->GetBufferSize());
-	m_VB->Bind();
-
-	m_IB->Load(indices, _countof(indices));
-	m_IB->Bind();
 }
 
 void Renderer::ShutDown()
@@ -72,16 +62,10 @@ void Renderer::ShutDown()
 	SAFE_RELEASE(m_Device)
 	SAFE_RELEASE(m_Context)
 
-	SAFE_DELETE_POINTER(m_VB)
-	SAFE_DELETE_POINTER(m_IB)
-
 	SAFE_DELETE_POINTER(m_VS)
 	SAFE_DELETE_POINTER(m_PS)
 }
 
-// todo Create a header file for shader struct declarations and include that file in all the child shader files
-// todo Add index buffers, get the mesh pipeline working for PCU
-// todo Translate the D3d input layout in the the Predefined VertexLayout struct
 // todo change the shaders to unions
 
 void Renderer::CreateDeviceAndSwapChain()
@@ -103,6 +87,7 @@ void Renderer::CreateDeviceAndSwapChain()
 	desc.OutputWindow = static_cast<HWND>(g_Window->GetHandle());
 	desc.SampleDesc.Count = 1;
 	desc.Windowed = TRUE;
+	desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_11_1,
@@ -212,27 +197,126 @@ void Renderer::Drawtext(const Vec2& position, const Vec4& color, const String& a
 
 void Renderer::DrawAABB2(const AABB2& aabb2, const Vec4& color)
 {
-	
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 0.0f))); //0
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 0.0f))); //1
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 1.0f))); //2
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //3
+
+	Mesh* mesh = g_MB->CreateMesh<VertexPCU>(6);
+
+	DrawMesh(mesh);
+
+	SAFE_DELETE_POINTER(mesh)
 }
 
 void Renderer::DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color)
 {
-	
+	Vec2 vertices[] = {
+		Vec2(aabb2.m_Mins),
+		Vec2(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y),
+	    Vec2(aabb2.m_Maxs),
+	    Vec2(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y)
+	};
+
+	DrawLine(vertices[0], vertices[1], thickness, color);
+	DrawLine(vertices[1], vertices[2], thickness, color);
+	DrawLine(vertices[2], vertices[3], thickness, color);
+	DrawLine(vertices[3], vertices[0], thickness, color);
 }
 
 void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color)
 {
-	
+	Vec2 distance = end - start;
+	Vec2 forward = distance.GetNormalised();
+
+	forward.SetLength(thickness / 2.0f);
+	Vec2 left = forward.GetRotated90Degrees();
+
+	Vec2 endLeft = end + forward + left;
+	Vec2 endRight = end + forward - left;
+	Vec2 startLeft = start - forward + left;
+	Vec2 startRight = start - forward - left;
+
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
+
+	Mesh* mesh = g_MB->CreateMesh<VertexPCU>(6);
+
+	DrawMesh(mesh);
+
+	SAFE_DELETE_POINTER(mesh)
 }
 
 void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color)
 {
+	Vec2 distance = end - start;
+	Vec2 forward = distance.GetNormalised();
+
+	forward.SetLength(thickness / 2.0f);
+	Vec2 left = forward.GetRotated90Degrees();
+
+	Vec2 endLeft = end - forward + left;
+	Vec2 endRight = end - forward - left;
+	Vec2 startLeft = start - forward + left;
+	Vec2 startRight = start - forward - left;
+
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
+
+	Mesh* mesh1 = g_MB->CreateMesh<VertexPCU>(6);
+
+	DrawMesh(mesh1);
+
+	SAFE_DELETE_POINTER(mesh1)
+
+	float Orientation = ( end - start ).GetAngleDegrees();
+	Vec2 rightVert = Vec2::MakeFromPolarDegrees( Orientation - 25.f , 3 * thickness );
+	Vec2 leftVert = Vec2::MakeFromPolarDegrees( Orientation + 25.f , 3 * thickness );
+
+	Vec2 top = end - forward;
+	Vec2 bottomLeft = end - leftVert;
+	Vec2 bottomRight = end - rightVert;
 	
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(top.m_X,           top.m_Y,           0.0f), color, Vec2(0.0f, 0.0f)));   //0
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(bottomLeft.m_X,    bottomLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(bottomRight.m_X,   bottomRight.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
+
+	Mesh* mesh2 = g_MB->CreateMesh<VertexPCU>(3);
+
+	DrawMesh(mesh2);
+
+	SAFE_DELETE_POINTER(mesh2)
 }
 
 void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& color)
 {
-	
+	for(int i = 0; i < 1; i++)
+	{
+		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(center.m_X,  center.m_Y,0.0f), color, Vec2(0.0f, 0.0f)));   //0
+
+		float startDeg, endDeg;
+		float angle = 360.0f / NUM_OF_DISC_VERTICES;
+		Vec2 start, end;
+
+		startDeg = angle * static_cast<float>(i);
+		endDeg = angle * static_cast<float>(i + 1);
+
+		start = Vec2(center.m_X + cosf(toRadians(startDeg)) * radius, center.m_Y + sinf(toRadians(startDeg)) * radius);
+		end = Vec2(center.m_X + cosf(toRadians(endDeg)) * radius, center.m_Y + sinf(toRadians(endDeg)) * radius);
+
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,   start.m_Y, 0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,     end.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
+	    
+	    Mesh* mesh = g_MB->CreateMesh<VertexPCU>(3);
+	    
+	    DrawMesh(mesh);
+
+		SAFE_DELETE_POINTER(mesh)
+	}
 }
 
 void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& color)
@@ -240,11 +324,23 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 	
 }
 
-void Renderer::DrawMesh()
+void Renderer::DrawMesh(Mesh* mesh)
 {
+	m_Context->IASetInputLayout(mesh->m_Layout);
+	mesh->m_VBO->Bind();
+
 	m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	m_Context->DrawIndexed(6, 0, 0);
+	if(mesh->m_Indices == 6)
+	{
+		mesh->m_IBO->Bind();
+
+		m_Context->DrawIndexed(6, 0, 0);
+	}
+	else
+	{
+		m_Context->Draw(mesh->m_Indices, 0);
+	}
 }
 
 ID3D11Device* Renderer::GetDevice() const
