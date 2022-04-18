@@ -11,6 +11,7 @@ IndexBuffer::IndexBuffer()
 
 IndexBuffer::~IndexBuffer()
 {
+	Release();
 }
 
 void IndexBuffer::Load(const void* data, unsigned int count)

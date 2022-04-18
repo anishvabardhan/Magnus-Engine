@@ -14,7 +14,6 @@
 Renderer* g_Renderer = nullptr;
 
 // todo swap chain flip discard
-// todo get rid of all warnings
 // todo read render targets
 
 Renderer::Renderer()
@@ -194,11 +193,9 @@ void Renderer::DrawAABB2(const AABB2& aabb2, const Vec4& color)
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 1.0f))); //2
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //3
 
-	Mesh* mesh = g_MB->CreateMesh<VertexPCU>(6);
+	g_MB->CreateMesh<VertexPCU>(6);
 
-	DrawMesh(mesh);
-
-	SAFE_DELETE_POINTER(mesh)
+	DrawMesh(g_MB->m_Mesh);
 }
 
 void Renderer::DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color)
@@ -234,11 +231,9 @@ void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Ve
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
-	Mesh* mesh = g_MB->CreateMesh<VertexPCU>(6);
+	g_MB->CreateMesh<VertexPCU>(6);
 
-	DrawMesh(mesh);
-
-	SAFE_DELETE_POINTER(mesh)
+	DrawMesh(g_MB->m_Mesh);
 }
 
 void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color)
@@ -259,11 +254,9 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
-	Mesh* mesh1 = g_MB->CreateMesh<VertexPCU>(6);
+	g_MB->CreateMesh<VertexPCU>(6);
 
-	DrawMesh(mesh1);
-
-	SAFE_DELETE_POINTER(mesh1)
+	DrawMesh(g_MB->m_Mesh);
 
 	float Orientation = ( end - start ).GetAngleDegrees();
 	Vec2 rightVert = Vec2::MakeFromPolarDegrees( Orientation - 25.f , 3 * thickness );
@@ -272,16 +265,14 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 	Vec2 top = end - forward;
 	Vec2 bottomLeft = end - leftVert;
 	Vec2 bottomRight = end - rightVert;
-	
+
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(top.m_X,           top.m_Y,           0.0f), color, Vec2(0.0f, 0.0f)));   //0
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(bottomLeft.m_X,    bottomLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
 	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(bottomRight.m_X,   bottomRight.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
 
-	Mesh* mesh2 = g_MB->CreateMesh<VertexPCU>(3);
+	g_MB->CreateMesh<VertexPCU>(3);
 
-	DrawMesh(mesh2);
-
-	SAFE_DELETE_POINTER(mesh2)
+	DrawMesh(g_MB->m_Mesh);
 }
 
 void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& color)
@@ -303,11 +294,9 @@ void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& col
 	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,   end.m_Y, 0.0f), color, Vec2(1.0f, 0.0f)));   //1
 	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,     start.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
 	    
-	    Mesh* mesh = g_MB->CreateMesh<VertexPCU>(3);
+	    g_MB->CreateMesh<VertexPCU>(3);
 	    
-	    DrawMesh(mesh);
-
-		SAFE_DELETE_POINTER(mesh)
+	    DrawMesh(g_MB->m_Mesh);
 	}
 }
 
@@ -325,17 +314,14 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 		start = Vec2(center.m_X + cosf(toRadians(startDeg)) * radius, center.m_Y + sinf(toRadians(startDeg)) * radius);
 		end = Vec2(center.m_X + cosf(toRadians(endDeg)) * radius, center.m_Y + sinf(toRadians(endDeg)) * radius);
 
-		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,    end.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,  start.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X - (RING_THICKNESS * cosf(toRadians(startDeg))), start.m_Y - (RING_THICKNESS * sinf(toRadians(startDeg))), 0.0f), color, Vec2(0.0f, 1.0f)));   //3
-		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(1.0f, 1.0f)));   //2
+		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,    end.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //0
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,  start.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //1
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X - (RING_THICKNESS * cosf(toRadians(startDeg))), start.m_Y - (RING_THICKNESS * sinf(toRadians(startDeg))), 0.0f), color, Vec2(0.0f, 1.0f)));   //2
+		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(1.0f, 1.0f)));         //3
 
-
-	    Mesh* mesh = g_MB->CreateMesh<VertexPCU>(6);
+	    g_MB->CreateMesh<VertexPCU>(6);
 	    
-	    DrawMesh(mesh);
-
-		SAFE_DELETE_POINTER(mesh)
+	    DrawMesh(g_MB->m_Mesh);
 	}
 }
 

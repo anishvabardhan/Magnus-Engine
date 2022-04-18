@@ -6,16 +6,19 @@ MeshBuilder* g_MB = nullptr;
 
 MeshBuilder::MeshBuilder()
 {
+	m_Mesh = new Mesh();
 }
 
 MeshBuilder::~MeshBuilder()
 {
+	SAFE_DELETE_POINTER(m_Mesh)
 }
 
 template <typename FORMAT>
-Mesh* MeshBuilder::CreateMesh(uint32_t indices)
+void MeshBuilder::CreateMesh(uint32_t indices)
 {
-	Mesh* mesh = new Mesh();
+	delete m_Mesh;
+	m_Mesh = new Mesh();
 
 	size_t size = m_Vertices.size();
 	FORMAT* temp = new FORMAT[sizeof(FORMAT) * size]; 
@@ -25,13 +28,11 @@ Mesh* MeshBuilder::CreateMesh(uint32_t indices)
 		temp[index] = FORMAT(m_Vertices[index]);
 	}
 
-	mesh->m_Indices = indices;
-	mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), &FORMAT::m_Layout);
+	m_Mesh->m_Indices = indices;
+	m_Mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), &FORMAT::m_Layout);
 
 	while(!m_Vertices.empty())
 	{
 		m_Vertices.pop_back();
 	}
-
-	return mesh;
 }

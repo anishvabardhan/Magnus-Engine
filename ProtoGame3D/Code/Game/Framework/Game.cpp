@@ -51,7 +51,6 @@ void Game::Render()
 	Vec2 start = Vec2(-0.5f, -0.5f);
 	Vec2 end = Vec2(0.5f, 0.5f);
 
-	//g_Renderer->DrawHollowAABB2(AABB2(start, end), 0.05f, Color::RED);
 	g_Renderer->DrawRing(Vec2::ZERO_ZERO, 0.5f, Color::YELLOW);
 }
 
