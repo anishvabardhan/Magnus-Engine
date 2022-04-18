@@ -29,3 +29,5 @@ public:
 	bool HandleKeyUp(unsigned char KeyCode);
 	bool HandleKeyDown(unsigned char KeyCode);
 };
+
+extern InputSystem* g_InputSystem;

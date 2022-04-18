@@ -9,7 +9,6 @@
 class VertexBuffer
 {
 	ID3D11Buffer* m_Buffer = nullptr;
-
 	uint32_t m_VertexSize;
 public:
 	VertexBuffer();

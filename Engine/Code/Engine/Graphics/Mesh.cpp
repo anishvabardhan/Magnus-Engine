@@ -40,7 +40,10 @@ void Mesh::CopyToGPU(const void* data, uint32_t arraySize, VertexBufferLayout* l
 	HRESULT result = g_Renderer->GetDevice()->CreateInputLayout(m_Attribs, ARRAYSIZE(m_Attribs), g_Renderer->GetShaderByteCode(), g_Renderer->GetShaderByteSize(), &m_Layout);
 
 	LOG_CHECK(SUCCEEDED(result)) << "Layout was not created!!";
-
+#if MAGNUS_DEBUG
+	const char layoutDebugName[] = "InputLayout";
+    m_Layout->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( layoutDebugName ),layoutDebugName );
+#endif
 	if(m_Indices == 6)
 	{
 	    m_IBO = new IndexBuffer();

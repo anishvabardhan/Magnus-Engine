@@ -13,9 +13,18 @@ workspace "ProtoGame3D"
 
     defines
     {
-        "OPENGL_API=0",
-        "DX11_API=1"
+      "OPENGL_API=0",
+      "DX11_API=1"
     }
+
+    configuration "Debug"
+       defines {"MAGNUS_DEBUG"}
+
+    configuration "Development"
+       defines {"MAGNUS_DEV"}
+    
+    configuration "Shipping"
+       defines {"MAGNUS_SHIP"}
 
 BinaryDir="%{wks.location}/Run/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"
 IntermediateDir="%{wks.location}/Temporary/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"

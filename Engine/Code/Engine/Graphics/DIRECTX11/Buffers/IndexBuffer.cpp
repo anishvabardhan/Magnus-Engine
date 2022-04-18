@@ -32,6 +32,11 @@ void IndexBuffer::Load(const void* data, unsigned int count)
 	HRESULT result = g_Renderer->GetDevice()->CreateBuffer(&desc, &initData, &m_Buffer);
 
 	LOG_CHECK(SUCCEEDED(result)) << "Buffer was not created!!";
+
+#if MAGNUS_DEBUG
+	const char debugName[] = "IndexBuffer";
+    m_Buffer->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( debugName ),debugName );
+#endif
 }
 
 void IndexBuffer::Bind()

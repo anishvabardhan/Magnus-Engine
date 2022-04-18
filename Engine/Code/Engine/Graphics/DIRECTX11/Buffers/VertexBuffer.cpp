@@ -33,6 +33,11 @@ void VertexBuffer::Load(const void* data, uint32_t vertexSize, uint32_t arraySiz
 	HRESULT result = g_Renderer->GetDevice()->CreateBuffer(&desc, &initData, &m_Buffer);
 
 	LOG_CHECK(SUCCEEDED(result)) << "Buffer was not created!!";
+
+#if MAGNUS_DEBUG
+	const char debugName[] = "VertexBuffer";
+    m_Buffer->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( debugName ),debugName );
+#endif
 }
 
 void VertexBuffer::Bind()

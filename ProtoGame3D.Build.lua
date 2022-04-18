@@ -28,7 +28,8 @@ project "ProtoGame3D"
         "Engine",
         "d3d11.lib",
         "dxgi.lib",
-        "d3dcompiler.lib"
+        "d3dcompiler.lib",
+        "dxguid.lib"
     }
 
     filter "system:windows"

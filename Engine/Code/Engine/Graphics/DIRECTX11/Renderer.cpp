@@ -11,13 +11,9 @@
 #include "Buffers/VertexBuffer.h"
 #include "Buffers/IndexBuffer.h"
 
-#define DEBUG_LAYER 1
-
 Renderer* g_Renderer = nullptr;
 
-// todo look up debug names id3d resources
 // todo swap chain flip discard
-// todo finish implementation of all drawcalls
 // todo get rid of all warnings
 // todo read render targets
 
@@ -35,24 +31,8 @@ void Renderer::StartUp()
 	SetRenderTarget();
 	SetViewport();
 
-	//m_Shader = new Shader();
-
-	m_VS = new VertexShader();
-	m_PS = new PixelShader();
-	
-	m_VS->CompileShader(MAGNUS_VERTEX_SHADER, "vsmain", MAGNUS_VERTEX_SHADER_VER);
-	m_VS->CreateShader();
-	m_VS->LoadShader();
-	
-	m_PS->CompileShader(MAGNUS_PIXEL_SHADER, "psmain", MAGNUS_PIXEL_SHADER_VER);
-	m_PS->CreateShader();
-	m_PS->LoadShader();
-
-	m_VB = new VertexBuffer();
-	m_IB = new IndexBuffer();
-
+	m_Shader = new Shader();
 	g_MB = new MeshBuilder();
-
 }
 
 void Renderer::ShutDown()
@@ -62,17 +42,15 @@ void Renderer::ShutDown()
 	SAFE_RELEASE(m_Device)
 	SAFE_RELEASE(m_Context)
 
-	SAFE_DELETE_POINTER(m_VS)
-	SAFE_DELETE_POINTER(m_PS)
+	SAFE_DELETE_POINTER(g_MB)
+	SAFE_DELETE_POINTER(m_Shader)
 }
-
-// todo change the shaders to unions
 
 void Renderer::CreateDeviceAndSwapChain()
 {
 	uint32_t deviceFlags = NULL;
 
-#if DEBUG_LAYER
+#if MAGNUS_DEBUG
 		deviceFlags = D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
@@ -110,6 +88,17 @@ void Renderer::CreateDeviceAndSwapChain()
 	);
 
 	LOG_CHECK(SUCCEEDED(result)) << "Couldn't create device and swapchain!!";
+
+#if MAGNUS_DEBUG
+	const char deviceDebugName[] = "Device";
+    m_Device->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( deviceDebugName ),deviceDebugName );
+	
+	const char swapchainDebugName[] = "SwapChain";
+    m_SwapChain->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( swapchainDebugName ),swapchainDebugName );
+	
+	const char contextDebugName[] = "Context";
+    m_Context->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( contextDebugName ),contextDebugName );
+#endif
 }
 
 void Renderer::Present(UINT vsync)
@@ -127,6 +116,9 @@ void Renderer::SetRenderTarget()
 	result = m_Device->CreateRenderTargetView(backBuffer, NULL, &m_RenderTargetView);
 
 	LOG_CHECK(SUCCEEDED(result)) << "Render Target View was not created!!";
+	
+	const char rendertargetDebugName[] = "SwapChain";
+    m_RenderTargetView->SetPrivateData( WKPDID_D3DDebugObjectName, sizeof( rendertargetDebugName ) - 1,rendertargetDebugName );
 
 	SAFE_RELEASE(backBuffer)
 
@@ -294,7 +286,7 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 
 void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& color)
 {
-	for(int i = 0; i < 1; i++)
+	for(int i = 0; i < NUM_OF_DISC_VERTICES; i++)
 	{
 		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(center.m_X,  center.m_Y,0.0f), color, Vec2(0.0f, 0.0f)));   //0
 
@@ -308,8 +300,8 @@ void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& col
 		start = Vec2(center.m_X + cosf(toRadians(startDeg)) * radius, center.m_Y + sinf(toRadians(startDeg)) * radius);
 		end = Vec2(center.m_X + cosf(toRadians(endDeg)) * radius, center.m_Y + sinf(toRadians(endDeg)) * radius);
 
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,   start.m_Y, 0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,     end.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,   end.m_Y, 0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,     start.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
 	    
 	    Mesh* mesh = g_MB->CreateMesh<VertexPCU>(3);
 	    
@@ -321,7 +313,30 @@ void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& col
 
 void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& color)
 {
-	
+	for(int i = 0; i < NUM_OF_DISC_VERTICES; i++)
+	{
+		float startDeg, endDeg;
+		float angle = 360.0f / NUM_OF_DISC_VERTICES;
+		Vec2 start, end;
+
+		startDeg = angle * static_cast<float>(i);
+		endDeg = angle * static_cast<float>(i + 1);
+
+		start = Vec2(center.m_X + cosf(toRadians(startDeg)) * radius, center.m_Y + sinf(toRadians(startDeg)) * radius);
+		end = Vec2(center.m_X + cosf(toRadians(endDeg)) * radius, center.m_Y + sinf(toRadians(endDeg)) * radius);
+
+		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,    end.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,  start.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
+	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X - (RING_THICKNESS * cosf(toRadians(startDeg))), start.m_Y - (RING_THICKNESS * sinf(toRadians(startDeg))), 0.0f), color, Vec2(0.0f, 1.0f)));   //3
+		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(1.0f, 1.0f)));   //2
+
+
+	    Mesh* mesh = g_MB->CreateMesh<VertexPCU>(6);
+	    
+	    DrawMesh(mesh);
+
+		SAFE_DELETE_POINTER(mesh)
+	}
 }
 
 void Renderer::DrawMesh(Mesh* mesh)

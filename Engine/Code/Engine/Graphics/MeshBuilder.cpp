@@ -26,7 +26,7 @@ Mesh* MeshBuilder::CreateMesh(uint32_t indices)
 	}
 
 	mesh->m_Indices = indices;
-	mesh->CopyToGPU(temp, (uint32_t)size * 9 * sizeof(float), &FORMAT::m_Layout);
+	mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), &FORMAT::m_Layout);
 
 	while(!m_Vertices.empty())
 	{

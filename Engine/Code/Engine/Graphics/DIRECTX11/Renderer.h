@@ -14,8 +14,6 @@ class Font;
 class FrameBuffer;
 class VertexShader;
 class PixelShader;
-class VertexBuffer;
-class IndexBuffer;
 struct MeshBuilder;
 struct Mesh;
 class Shader;
@@ -25,17 +23,10 @@ class Renderer
 	ID3D11Device* m_Device = nullptr;
 	ID3D11DeviceContext* m_Context = nullptr;
 	ID3D11RenderTargetView* m_RenderTargetView = nullptr;
-	ID3D11InputLayout* m_Layout = nullptr;
 
 	IDXGISwapChain* m_SwapChain = nullptr;
 
-	VertexShader* m_VS = nullptr;
-	PixelShader* m_PS = nullptr;
-
 	Shader* m_Shader = nullptr;
-
-	VertexBuffer* m_VB = nullptr;
-	IndexBuffer* m_IB = nullptr;
 public:
 	Renderer();
 	~Renderer();
@@ -76,8 +67,8 @@ public:
 	ID3D11Device* GetDevice() const;
 	ID3D11DeviceContext* GetContext() const;
 
-	void* GetShaderByteCode() { return m_VS->m_Blob->GetBufferPointer(); }
-	size_t GetShaderByteSize() { return m_VS->m_Blob->GetBufferSize(); }
+	void* GetShaderByteCode() { return m_Shader->m_VSBlob->GetBufferPointer(); }
+	size_t GetShaderByteSize() { return m_Shader->m_VSBlob->GetBufferSize(); }
 };
 
 extern Renderer* g_Renderer;
