@@ -1,6 +1,7 @@
 #include "Vec3.h"
 
 #include "Engine/Core/CoreMACROS.h"
+#include "MathUtils.h"
 
 STATIC const Vec3 Vec3::ZERO;
 STATIC const Vec3 Vec3::ONE = Vec3(1.0f, 1.0f, 1.0f);
@@ -84,4 +85,15 @@ std::ostream& operator<<(std::ostream& stream, const Vec3& vector)
 {
 	stream << "(" << vector.m_X << ", " << vector.m_Y << ", " << vector.m_Z << ")";
 	return stream;
+}
+
+Vec3 Interpolate(const Vec3& start, const Vec3& end, float delta)
+{
+	Vec3 temp;
+
+	temp.m_X = Interpolate(start.m_X, end.m_X, delta);
+	temp.m_Y = Interpolate(start.m_Y, end.m_Y, delta);
+	temp.m_Z = Interpolate(start.m_Z, end.m_Z, delta);
+
+	return temp;
 }

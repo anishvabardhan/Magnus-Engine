@@ -8,7 +8,7 @@ workspace "ProtoGame3D"
     disablewarnings
     {
     	"4100",
-        "4201"
+      "4201"
     }
 
     defines
@@ -18,13 +18,13 @@ workspace "ProtoGame3D"
     }
 
     configuration "Debug"
-       defines {"MAGNUS_DEBUG"}
+       defines {"MAGNUS_DEBUG=1"}
 
     configuration "Development"
-       defines {"MAGNUS_DEV"}
+       defines {"MAGNUS_DEV=1"}
     
     configuration "Shipping"
-       defines {"MAGNUS_SHIP"}
+       defines {"MAGNUS_SHIP=1"}
 
 BinaryDir="%{wks.location}/Run/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"
 IntermediateDir="%{wks.location}/Temporary/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"

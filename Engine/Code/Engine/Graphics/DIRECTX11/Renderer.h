@@ -18,6 +18,13 @@ struct MeshBuilder;
 struct Mesh;
 class Shader;
 
+struct BufferData
+{
+	Mat4 m_Projection;
+	Mat4 m_View;
+	Mat4 m_Model;
+};
+
 class Renderer
 {
 	ID3D11Device* m_Device = nullptr;
@@ -47,7 +54,7 @@ public:
 
 	// MVP UNIFORMS UPDATION METHODS
 	void SetCameraUniform(const Mat4& camera);
-	void SetModelTranslation(const Mat4& transform = Mat4::Identity());
+	void SetModelMatrix(const Mat4& transform = Mat4::Identity());
 
 	void CopyFrameBuffer(FrameBuffer* current, FrameBuffer* next);
 

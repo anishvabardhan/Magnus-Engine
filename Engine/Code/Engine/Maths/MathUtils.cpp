@@ -57,3 +57,12 @@ bool Disc_AABB2Collision(const Vec2& center, const float& radius, AABB2& box)
 
 	return (distSquared <= radSquared);
 }
+
+float Interpolate(const float& start, const float& end, float delta)
+{
+	float range = end - start;
+
+	float fractionValue = delta * range;
+
+	return fractionValue + start;
+}

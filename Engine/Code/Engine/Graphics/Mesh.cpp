@@ -8,6 +8,7 @@
 
 Mesh::Mesh()
 {
+	m_VBO = new VertexBuffer();
 }
 
 Mesh::~Mesh()
@@ -20,8 +21,6 @@ Mesh::~Mesh()
 
 void Mesh::CopyToGPU(const void* data, uint32_t arraySize, VertexBufferLayout* layout)
 {
-	m_VBO = new VertexBuffer();
-
 	m_VBO->Load(data, 9, arraySize);
 
 	for(size_t i = 0; i < layout->m_Element.size(); i++)

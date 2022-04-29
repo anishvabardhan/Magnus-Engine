@@ -34,7 +34,7 @@ void IndexBuffer::Load(const void* data, unsigned int count)
 
 	LOG_CHECK(SUCCEEDED(result)) << "Buffer was not created!!";
 
-#if MAGNUS_DEBUG
+#if !MAGNUS_SHIP
 	const char debugName[] = "IndexBuffer";
     m_Buffer->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( debugName ),debugName );
 #endif

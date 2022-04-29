@@ -2,23 +2,18 @@
 
 #include "Mesh.h"
 
-MeshBuilder* g_MB = nullptr;
-
 MeshBuilder::MeshBuilder()
 {
-	m_Mesh = new Mesh();
 }
 
 MeshBuilder::~MeshBuilder()
 {
-	SAFE_DELETE_POINTER(m_Mesh)
 }
 
 template <typename FORMAT>
-void MeshBuilder::CreateMesh(uint32_t indices)
+Mesh* MeshBuilder::CreateMesh(uint32_t indices)
 {
-	delete m_Mesh;
-	m_Mesh = new Mesh();
+	Mesh* mesh = new Mesh();
 
 	size_t size = m_Vertices.size();
 	FORMAT* temp = new FORMAT[sizeof(FORMAT) * size]; 
@@ -28,11 +23,11 @@ void MeshBuilder::CreateMesh(uint32_t indices)
 		temp[index] = FORMAT(m_Vertices[index]);
 	}
 
-	m_Mesh->m_Indices = indices;
-	m_Mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), &FORMAT::m_Layout);
+	mesh->m_Indices = indices;
+	mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), &FORMAT::m_Layout);
 
-	while(!m_Vertices.empty())
-	{
-		m_Vertices.pop_back();
-	}
+	delete []temp;
+	temp = nullptr;
+
+	return mesh;
 }

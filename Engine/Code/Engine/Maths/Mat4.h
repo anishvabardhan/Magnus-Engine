@@ -1,5 +1,4 @@
 #pragma once
-#pragma warning( disable : 4201)
 
 #include "Vec2.h"
 #include "Vec3.h"

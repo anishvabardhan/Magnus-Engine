@@ -8,16 +8,13 @@ struct Mesh;
 
 struct MeshBuilder
 {
-	Mesh* m_Mesh = nullptr;
 	std::vector<VertexMaster> m_Vertices;
 
 	MeshBuilder();
 	~MeshBuilder();
 
 	template<typename FORMAT>
-	void CreateMesh(uint32_t indices);
+	Mesh* CreateMesh(uint32_t indices);
 };
 
-template void MeshBuilder::CreateMesh<VertexPCU>(uint32_t indices);
-
-extern MeshBuilder* g_MB;
+template Mesh* MeshBuilder::CreateMesh<VertexPCU>(uint32_t indices);

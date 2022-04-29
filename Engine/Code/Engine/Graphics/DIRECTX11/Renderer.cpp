@@ -10,11 +10,14 @@
 #include "Engine/Graphics/MeshBuilder.h"
 #include "Buffers/VertexBuffer.h"
 #include "Buffers/IndexBuffer.h"
+#include "Buffers/ConstantBuffer.h"
 
 Renderer* g_Renderer = nullptr;
 
-// todo swap chain flip discard
-// todo read render targets
+const Mat4 g_Camera = Mat4::Orthographic(-5.0f, 5.0f, -5.0f, 5.0f, -2.0f, 2.0f);
+
+// todo read on struct alignment, padding
+// todo constant buffers
 
 Renderer::Renderer()
 {
@@ -31,7 +34,8 @@ void Renderer::StartUp()
 	SetViewport();
 
 	m_Shader = new Shader();
-	g_MB = new MeshBuilder();
+	g_CBO = new ConstantBuffer();
+	g_CBO->Init(sizeof(BufferData));
 }
 
 void Renderer::ShutDown()
@@ -41,7 +45,7 @@ void Renderer::ShutDown()
 	SAFE_RELEASE(m_Device)
 	SAFE_RELEASE(m_Context)
 
-	SAFE_DELETE_POINTER(g_MB)
+	SAFE_DELETE_POINTER(g_CBO)
 	SAFE_DELETE_POINTER(m_Shader)
 }
 
@@ -161,12 +165,14 @@ void Renderer::BindTexture(const Texture* texture, int textureSlot)
 
 void Renderer::SetCameraUniform(const Mat4& camera)
 {
-	
+	g_CBO->Map(&camera);
+	g_CBO->Unmap();
 }
 
-void Renderer::SetModelTranslation(const Mat4& transform)
+void Renderer::SetModelMatrix(const Mat4& transform)
 {
-	
+	g_CBO->Map(&transform);
+	g_CBO->Unmap();
 }
 
 void Renderer::CopyFrameBuffer(FrameBuffer* current, FrameBuffer* next)
@@ -188,14 +194,18 @@ void Renderer::Drawtext(const Vec2& position, const Vec4& color, const String& a
 
 void Renderer::DrawAABB2(const AABB2& aabb2, const Vec4& color)
 {
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 0.0f))); //0
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 0.0f))); //1
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 1.0f))); //2
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //3
+	MeshBuilder mb = MeshBuilder();
 
-	g_MB->CreateMesh<VertexPCU>(6);
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 0.0f))); //0
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 0.0f))); //1
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 1.0f))); //2
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //3
 
-	DrawMesh(g_MB->m_Mesh);
+	Mesh* mesh = mb.CreateMesh<VertexPCU>(6);
+	
+	DrawMesh(mesh);
+
+	SAFE_DELETE_POINTER(mesh)
 }
 
 void Renderer::DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color)
@@ -226,14 +236,18 @@ void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Ve
 	Vec2 startLeft = start - forward + left;
 	Vec2 startRight = start - forward - left;
 
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
+	MeshBuilder mb = MeshBuilder();
 
-	g_MB->CreateMesh<VertexPCU>(6);
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
-	DrawMesh(g_MB->m_Mesh);
+	Mesh* mesh = mb.CreateMesh<VertexPCU>(6);
+
+	DrawMesh(mesh);
+
+	SAFE_DELETE_POINTER(mesh)
 }
 
 void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color)
@@ -249,14 +263,18 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 	Vec2 startLeft = start - forward + left;
 	Vec2 startRight = start - forward - left;
 
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
+	MeshBuilder mb1 = MeshBuilder();
 
-	g_MB->CreateMesh<VertexPCU>(6);
+	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //0
+	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //2
+	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
-	DrawMesh(g_MB->m_Mesh);
+	Mesh* mesh1 = mb1.CreateMesh<VertexPCU>(6);
+
+	DrawMesh(mesh1);
+
+	SAFE_DELETE_POINTER(mesh1)
 
 	float Orientation = ( end - start ).GetAngleDegrees();
 	Vec2 rightVert = Vec2::MakeFromPolarDegrees( Orientation - 25.f , 3 * thickness );
@@ -266,20 +284,26 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 	Vec2 bottomLeft = end - leftVert;
 	Vec2 bottomRight = end - rightVert;
 
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(top.m_X,           top.m_Y,           0.0f), color, Vec2(0.0f, 0.0f)));   //0
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(bottomLeft.m_X,    bottomLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(bottomRight.m_X,   bottomRight.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
+	MeshBuilder mb2 = MeshBuilder();
 
-	g_MB->CreateMesh<VertexPCU>(3);
+	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(top.m_X,           top.m_Y,           0.0f), color, Vec2(0.0f, 0.0f)));   //0
+	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(bottomLeft.m_X,    bottomLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(bottomRight.m_X,   bottomRight.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
 
-	DrawMesh(g_MB->m_Mesh);
+	Mesh* mesh2 = mb2.CreateMesh<VertexPCU>(3);
+
+	DrawMesh(mesh2);
+
+	SAFE_DELETE_POINTER(mesh2)
 }
 
 void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& color)
 {
 	for(int i = 0; i < NUM_OF_DISC_VERTICES; i++)
 	{
-		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(center.m_X,  center.m_Y,0.0f), color, Vec2(0.0f, 0.0f)));   //0
+		MeshBuilder mb = MeshBuilder();
+
+		mb.m_Vertices.emplace_back(VertexMaster(Vec3(center.m_X,  center.m_Y,0.0f), color, Vec2(0.0f, 0.0f)));   //0
 
 		float startDeg, endDeg;
 		float angle = 360.0f / NUM_OF_DISC_VERTICES;
@@ -291,12 +315,14 @@ void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& col
 		start = Vec2(center.m_X + cosf(toRadians(startDeg)) * radius, center.m_Y + sinf(toRadians(startDeg)) * radius);
 		end = Vec2(center.m_X + cosf(toRadians(endDeg)) * radius, center.m_Y + sinf(toRadians(endDeg)) * radius);
 
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,   end.m_Y, 0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,     start.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,   end.m_Y, 0.0f), color, Vec2(1.0f, 0.0f)));   //1
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,     start.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
 	    
-	    g_MB->CreateMesh<VertexPCU>(3);
+	    Mesh* mesh = mb.CreateMesh<VertexPCU>(3);
 	    
-	    DrawMesh(g_MB->m_Mesh);
+	    DrawMesh(mesh);
+
+		SAFE_DELETE_POINTER(mesh)
 	}
 }
 
@@ -314,19 +340,34 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 		start = Vec2(center.m_X + cosf(toRadians(startDeg)) * radius, center.m_Y + sinf(toRadians(startDeg)) * radius);
 		end = Vec2(center.m_X + cosf(toRadians(endDeg)) * radius, center.m_Y + sinf(toRadians(endDeg)) * radius);
 
-		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,    end.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //0
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,  start.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //1
-	    g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X - (RING_THICKNESS * cosf(toRadians(startDeg))), start.m_Y - (RING_THICKNESS * sinf(toRadians(startDeg))), 0.0f), color, Vec2(0.0f, 1.0f)));   //2
-		g_MB->m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(1.0f, 1.0f)));         //3
+		MeshBuilder mb = MeshBuilder();
 
-	    g_MB->CreateMesh<VertexPCU>(6);
+		mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,    end.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //0
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,  start.m_Y,  0.0f), color, Vec2(0.0f, 0.0f)));   //1
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X - (RING_THICKNESS * cosf(toRadians(startDeg))), start.m_Y - (RING_THICKNESS * sinf(toRadians(startDeg))), 0.0f), color, Vec2(0.0f, 1.0f)));   //2
+		mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(1.0f, 1.0f)));         //3
+
+	    Mesh* mesh = mb.CreateMesh<VertexPCU>(6);
 	    
-	    DrawMesh(g_MB->m_Mesh);
+	    DrawMesh(mesh);
+
+		SAFE_DELETE_POINTER(mesh)
 	}
 }
 
 void Renderer::DrawMesh(Mesh* mesh)
 {
+	BufferData bData;
+
+	bData.m_Projection = g_Camera;
+	bData.m_View = Mat4::Identity();
+	bData.m_Model = Mat4::Translation(Vec3(1.0f, 0.0f, 0.0f));
+
+	g_CBO->Map(&bData);
+	g_CBO->Unmap();
+
+	g_CBO->Bind(0);
+
 	m_Context->IASetInputLayout(mesh->m_Layout);
 	mesh->m_VBO->Bind();
 

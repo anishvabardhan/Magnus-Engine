@@ -13,8 +13,6 @@
 //--------------------------------------------------------------------------------------------------
 // Creating a Camera
 
-//const Mat4 g_Camera = Mat4::Orthographic(MAGNUS_WINDOW_DIMS[0], MAGNUS_WINDOW_DIMS[1], MAGNUS_WINDOW_DIMS[2], MAGNUS_WINDOW_DIMS[3], -2.0f, 2.0f);
-
 //--------------------------------------------------------------------------------------------------
 
 Game::Game()
@@ -47,9 +45,6 @@ void Game::Update(float deltaseconds)
 void Game::Render()
 {
 	g_Renderer->ClearColor(Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-	Vec2 start = Vec2(-0.5f, -0.5f);
-	Vec2 end = Vec2(0.5f, 0.5f);
 
 	g_Renderer->DrawRing(Vec2::ZERO_ZERO, 0.5f, Color::YELLOW);
 }

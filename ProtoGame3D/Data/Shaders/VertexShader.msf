@@ -1,9 +1,22 @@
 #include "HeaderShader.msf"
 
+cbuffer ConstantBuffer : register(b0)
+{
+    float4x4 Projection;
+	float4x4 View;
+	float4x4 Model;
+};
+
 VSOutput vsmain(VSInput input)
 {
+	float4 localPos    = float4(input.inPosition, 1.0f);
+	
+	float4 worldPos    = mul(Model, localPos);             // Local space to World space
+	float4 cameraPos   = mul(View, worldPos);              // World space to Camera space
+	float4 clipPos     = mul(Projection, cameraPos);       // Camera space to clip space
+
 	VSOutput output;
-	output.outPos = float4(input.inPosition, 1.0f);
+	output.outPos = clipPos;
 	output.outColor = input.inColor;
 
 	return output;
