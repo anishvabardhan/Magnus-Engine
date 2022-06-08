@@ -5,8 +5,6 @@
 #include "ConstantBuffer.h"
 #include "Engine/Graphics/DIRECTX11/Renderer.h"
 
-ConstantBuffer* g_CBO = nullptr;
-
 ConstantBuffer::ConstantBuffer()
 {
 }
@@ -33,7 +31,7 @@ void ConstantBuffer::Init(size_t dataByteSize)
 	LOG_CHECK(SUCCEEDED(result)) << "Buffer was not created!!";
 }
 
-void ConstantBuffer::Map(const void* data)
+void ConstantBuffer::CopyToGPU(const void* data)
 {
 	D3D11_MAPPED_SUBRESOURCE map;
 	HRESULT result = g_Renderer->GetContext()->Map(m_Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
@@ -41,21 +39,18 @@ void ConstantBuffer::Map(const void* data)
 	LOG_CHECK(SUCCEEDED(result)) << "Couldn't map the constant buffer!!";
 	
 	memcpy(map.pData, data, m_DataByteSize);
-}
 
-void ConstantBuffer::Unmap()
-{
 	g_Renderer->GetContext()->Unmap(m_Buffer, 0);
-}
-
-void ConstantBuffer::Bind(unsigned int slot)
-{
-	g_Renderer->GetContext()->VSSetConstantBuffers(slot, 1, &m_Buffer);
 }
 
 void ConstantBuffer::Release()
 {
 	SAFE_RELEASE(m_Buffer)
+}
+
+ID3D11Buffer* const ConstantBuffer::GetBuffer()
+{
+	return m_Buffer;
 }
 
 #endif

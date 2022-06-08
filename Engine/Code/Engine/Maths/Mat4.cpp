@@ -213,11 +213,20 @@ Mat4 Mat4::Orthographic(float left, float right, float bottom, float top, float 
 }
 
 Mat4 Mat4::Perspective(float fov, float aspectRatio, float near, float far)
-{
+{//todo update edge cases
 	Mat4 result;
 
 	float q = 1.0f / tanf(toRadians(0.5f * fov));
-	float a = q / aspectRatio;
+	float a = 0.0f;
+	if(aspectRatio > 1.0f)
+	{
+		a = q / aspectRatio;
+	}
+	else
+	{
+		a = q * aspectRatio;
+	}
+
 	float b = (near + far) * 1.0f / (far - near);
 	float c = (-2.0f * far * near) * 1.0f / (far - near);
 
@@ -226,6 +235,7 @@ Mat4 Mat4::Perspective(float fov, float aspectRatio, float near, float far)
 	result.elements[10] = b;
 	result.elements[11] = -1.0f;
 	result.elements[14] = c;
+	result.Tw = 0.0f;
 
 	return result;
 }

@@ -21,12 +21,12 @@ float Clamp(float value, float min, float max)
 
 float CosDegrees(float degrees)
 {
-	return cos(toRadians(degrees));
+	return cosf(toRadians(degrees));
 }
 
 float SinDegrees(float degrees)
 {
-	return sin(toRadians(degrees));
+	return sinf(toRadians(degrees));
 }
 
 float Atan2Degrees(float y, float x)

@@ -38,6 +38,8 @@
 *.app
 
 #codedatabases
+*.idb
+*.pdb
 *.db
 *.sdf
 *.opensdf

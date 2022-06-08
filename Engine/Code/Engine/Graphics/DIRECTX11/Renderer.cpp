@@ -1,23 +1,26 @@
+#include "TextureView.h"
 #if DX11_API
 
 #include "Renderer.h"
 
+#include "Sampler.h"
+#include "Shader.h"
+#include "SwapChain.h"
 #include "Engine/Window/Window.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Core/LogMessage.h"
-#include "Shader.h"
 #include "Engine/Graphics/Mesh.h"
 #include "Engine/Graphics/MeshBuilder.h"
 #include "Buffers/VertexBuffer.h"
 #include "Buffers/IndexBuffer.h"
-#include "Buffers/ConstantBuffer.h"
+#include "Engine/Graphics/Font.h"
+#include "Engine/Graphics/Camera.h"
+#include "External/stb_image.h"
 
 Renderer* g_Renderer = nullptr;
 
-const Mat4 g_Camera = Mat4::Orthographic(-5.0f, 5.0f, -5.0f, 5.0f, -2.0f, 2.0f);
-
-// todo read on struct alignment, padding
-// todo constant buffers
+// todo understanding rendertargets
+// todo next task: Setup a perspective view and Render a cube
 
 Renderer::Renderer()
 {
@@ -30,23 +33,59 @@ Renderer::~Renderer()
 void Renderer::StartUp()
 {
 	CreateDeviceAndSwapChain();
-	SetRenderTarget();
+	CreateRenderTarget(Vec2(MAGNUS_WINDOW_DIMS[1], MAGNUS_WINDOW_DIMS[3]));
+	SetRenderTargets();
 	SetViewport();
 
 	m_Shader = new Shader();
-	g_CBO = new ConstantBuffer();
-	g_CBO->Init(sizeof(BufferData));
+
+	m_Camera = new Camera();
+	m_Camera->SetOrtho(-5.0f, 5.0f, -5.0f, 5.0f, -2.0f, 2.0f);
+
+	m_ModelCBO.Init(sizeof(ModelData));
+	m_CameraCBO.Init(sizeof(ViewData));
+
+	m_DefaultTexture = GetOrCreateTexture(MAGNUS_DEFAULT_TEXTURE);
+
+	SetCamera();
 }
 
 void Renderer::ShutDown()
 {
-	SAFE_RELEASE(m_SwapChain)
-	SAFE_RELEASE(m_RenderTargetView)
 	SAFE_RELEASE(m_Device)
 	SAFE_RELEASE(m_Context)
 
-	SAFE_DELETE_POINTER(g_CBO)
 	SAFE_DELETE_POINTER(m_Shader)
+	SAFE_DELETE_POINTER(m_Camera)
+	SAFE_DELETE_POINTER(m_RenderTarget)
+	SAFE_DELETE_POINTER(m_SwapChain)
+	SAFE_DELETE_POINTER(m_DefaultTexture)
+	SAFE_DELETE_POINTER(m_DefaultSampler)
+}
+
+void Renderer::SetCamera()
+{
+	ViewData cameraData;
+	cameraData.m_Projection = m_Camera->GetProjection();
+	cameraData.m_View = m_Camera->GetView();
+	
+	SetCameraBuffer(cameraData);
+	BindBufferSlot(CBO_VIEW_SLOT, m_CameraCBO.GetBuffer());
+
+	m_DefaultTexture->Bind(0);
+	m_DefaultSampler->Bind(0);
+}
+
+void Renderer::CopyResource(Texture* source, Texture* dest)
+{
+	if(dest == nullptr)
+	{//todo call handle through a getter.
+		m_Context->CopyResource(m_SwapChain->GetBackBuffer()->m_Handle, source->m_Handle);
+	}
+	else
+	{
+		m_Context->CopyResource(dest->m_Handle, source->m_Handle);
+	}
 }
 
 void Renderer::CreateDeviceAndSwapChain()
@@ -75,6 +114,8 @@ void Renderer::CreateDeviceAndSwapChain()
 		D3D_FEATURE_LEVEL_11_0
 	};
 
+	m_SwapChain = new SwapChain();
+
 	HRESULT result = D3D11CreateDeviceAndSwapChain(
 		nullptr, 
 		D3D_DRIVER_TYPE_HARDWARE,
@@ -84,11 +125,13 @@ void Renderer::CreateDeviceAndSwapChain()
 		_countof(featureLevels), 
 		D3D11_SDK_VERSION,
 		&desc,
-		&m_SwapChain,
+		&m_SwapChain->m_DeviceSwapChain,
 		&m_Device, 
 		NULL, 
 		&m_Context
 	);
+
+	m_SwapChain->PostInitialise();
 
 	LOG_CHECK(SUCCEEDED(result)) << "Couldn't create device and swapchain!!";
 
@@ -97,7 +140,7 @@ void Renderer::CreateDeviceAndSwapChain()
     m_Device->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( deviceDebugName ),deviceDebugName );
 	
 	const char swapchainDebugName[] = "SwapChain";
-    m_SwapChain->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( swapchainDebugName ),swapchainDebugName );
+    m_SwapChain->m_DeviceSwapChain->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( swapchainDebugName ),swapchainDebugName );
 	
 	const char contextDebugName[] = "Context";
     m_Context->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( contextDebugName ),contextDebugName );
@@ -106,30 +149,40 @@ void Renderer::CreateDeviceAndSwapChain()
 
 void Renderer::Present(UINT vsync)
 {
-	m_SwapChain->Present(vsync, 0);
+	CopyResource(m_RenderTarget);
+
+	m_SwapChain->Present(vsync);
 }
 
-void Renderer::SetRenderTarget()
+void Renderer::CreateRenderTarget(Vec2 texel)
 {
-	ID3D11Texture2D* backBuffer = nullptr;
-	HRESULT result = m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+	D3D11_TEXTURE2D_DESC desc = {};
+	desc.Width	                    = static_cast<int>(texel.m_X);
+	desc.Height						= static_cast<int>(texel.m_Y);
+	desc.MipLevels					= 1;
+	desc.ArraySize					= 1;
+	desc.Format						= DXGI_FORMAT_B8G8R8A8_UNORM;
+	desc.SampleDesc.Count			= 1;																					
+	desc.SampleDesc.Quality			= 0;																					
+	desc.Usage						= D3D11_USAGE_DEFAULT;																	
+	desc.BindFlags					= D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags				= 0;																					
+	desc.MiscFlags					= 0;
 
-	LOG_CHECK(SUCCEEDED(result)) << "Couldn't get address of the back buffer!!";
+	m_RenderTarget = new Texture(desc);
 
-	result = m_Device->CreateRenderTargetView(backBuffer, NULL, &m_RenderTargetView);
+	m_RenderTargetView = new TextureView(m_RenderTarget);
 
-	LOG_CHECK(SUCCEEDED(result)) << "Render Target View was not created!!";
-	
-	const char rendertargetDebugName[] = "SwapChain";
-    m_RenderTargetView->SetPrivateData( WKPDID_D3DDebugObjectName, sizeof( rendertargetDebugName ) - 1,rendertargetDebugName );
+	m_RenderTargetView->CreateRenderTargetView();
+}
 
-	SAFE_RELEASE(backBuffer)
-
-	m_Context->OMSetRenderTargets(1, &m_RenderTargetView, NULL);
+void Renderer::SetRenderTargets()
+{
+	m_RenderTargetView->SetRenderTarget();
 }
 
 void Renderer::SetViewport()
-{
+{ 
 	 D3D11_VIEWPORT viewport;
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
@@ -163,16 +216,21 @@ void Renderer::BindTexture(const Texture* texture, int textureSlot)
 	
 }
 
-void Renderer::SetCameraUniform(const Mat4& camera)
+void Renderer::SetCameraBuffer(const ViewData& data)
 {
-	g_CBO->Map(&camera);
-	g_CBO->Unmap();
+	m_CameraCBO.CopyToGPU(&data);
 }
 
-void Renderer::SetModelMatrix(const Mat4& transform)
+void Renderer::SetModelBuffer(const ModelData& data)
 {
-	g_CBO->Map(&transform);
-	g_CBO->Unmap();
+	m_ModelCBO.CopyToGPU(&data);
+
+}
+
+void Renderer::BindBufferSlot(unsigned int slot, ID3D11Buffer* buffer)
+{
+	m_Context->VSSetConstantBuffers(slot, 1, &buffer);
+	m_Context->PSSetConstantBuffers(slot, 1, &buffer);
 }
 
 void Renderer::CopyFrameBuffer(FrameBuffer* current, FrameBuffer* next)
@@ -180,35 +238,71 @@ void Renderer::CopyFrameBuffer(FrameBuffer* current, FrameBuffer* next)
 	
 }
 
-void Renderer::ClearColor(const Vec4& color) const
+void Renderer::ClearScreen(const Vec4& color) const
 {
 	const float clearColor[] = {color.m_X, color.m_Y, color.m_Z, color.m_W};
-
-	m_Context->ClearRenderTargetView(m_RenderTargetView, clearColor);
-}
-
-void Renderer::Drawtext(const Vec2& position, const Vec4& color, const String& asciiText, float quadHeight, Font* font)
-{
 	
+	m_Context->ClearRenderTargetView(m_RenderTargetView->m_RTV, clearColor);
 }
 
-void Renderer::DrawAABB2(const AABB2& aabb2, const Vec4& color)
+void Renderer::Drawtext(const Vec2& position, const Vec4& color, const String& asciiText, float quadHeight, Font* font, ModelData model)
+{
+	Font* f = CreateBitmapFont(MAGNUS_FONT_BITMAP);
+
+	float quadWidth = quadHeight;
+
+	AABB2 quadPos;
+	AABB2 uvPos;
+
+	quadPos.m_Mins.m_Y = 0.0f + position.m_Y;
+	quadPos.m_Maxs.m_Y = quadHeight + position.m_Y;
+
+	for (size_t i = 0; i < asciiText.size(); i++)
+	{
+		MeshBuilder mb = MeshBuilder();
+
+		quadPos.m_Mins.m_X = (i * quadWidth) + position.m_X;
+		quadPos.m_Maxs.m_X = ((i + 1) * quadWidth) + position.m_X;
+
+		uvPos = f->GetGlyphUV(asciiText[i]);
+		
+		mb.m_Vertices.emplace_back(VertexMaster(Vec3(quadPos.m_Mins.m_X, quadPos.m_Mins.m_Y, 0.0f), color, Vec2(uvPos.m_Mins.m_X, uvPos.m_Maxs.m_Y))); //0
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(quadPos.m_Maxs.m_X, quadPos.m_Mins.m_Y, 0.0f), color, Vec2(uvPos.m_Maxs.m_X, uvPos.m_Maxs.m_Y))); //1
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(quadPos.m_Maxs.m_X, quadPos.m_Maxs.m_Y, 0.0f), color, Vec2(uvPos.m_Maxs.m_X, uvPos.m_Mins.m_Y))); //2
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(quadPos.m_Mins.m_X, quadPos.m_Maxs.m_Y, 0.0f), color, Vec2(uvPos.m_Mins.m_X, uvPos.m_Mins.m_Y))); //3
+
+	    Mesh* mesh = mb.CreateMesh<VertexPCU>(6);
+		
+	    SetModelBuffer(model);
+		BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
+
+	    DrawMesh(mesh);
+	    
+	    SAFE_DELETE_POINTER(mesh)
+		SAFE_DELETE_POINTER(f)
+	}
+}
+
+void Renderer::DrawAABB2(const AABB2& aabb2, const Vec4& color, ModelData model)
 {
 	MeshBuilder mb = MeshBuilder();
 
 	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 0.0f))); //0
-	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 0.0f))); //1
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //1
 	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 1.0f))); //2
-	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //3
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(1.0f, 0.0f))); //3
 
 	Mesh* mesh = mb.CreateMesh<VertexPCU>(6);
 	
+	SetModelBuffer(model);
+	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
+
 	DrawMesh(mesh);
 
 	SAFE_DELETE_POINTER(mesh)
 }
 
-void Renderer::DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color)
+void Renderer::DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color, ModelData model)
 {
 	Vec2 vertices[] = {
 		Vec2(aabb2.m_Mins),
@@ -223,7 +317,7 @@ void Renderer::DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const
 	DrawLine(vertices[3], vertices[0], thickness, color);
 }
 
-void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color)
+void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model)
 {
 	Vec2 distance = end - start;
 	Vec2 forward = distance.GetNormalised();
@@ -244,13 +338,16 @@ void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Ve
 	mb.m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
 	Mesh* mesh = mb.CreateMesh<VertexPCU>(6);
+	
+    SetModelBuffer(model);
+	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
 	DrawMesh(mesh);
 
 	SAFE_DELETE_POINTER(mesh)
 }
 
-void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color)
+void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model)
 {
 	Vec2 distance = end - start;
 	Vec2 forward = distance.GetNormalised();
@@ -271,6 +368,9 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y, 0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
 	Mesh* mesh1 = mb1.CreateMesh<VertexPCU>(6);
+	
+	SetModelBuffer(model);
+	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
 	DrawMesh(mesh1);
 
@@ -292,12 +392,15 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 
 	Mesh* mesh2 = mb2.CreateMesh<VertexPCU>(3);
 
+	SetModelBuffer(model);
+	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
+
 	DrawMesh(mesh2);
 
 	SAFE_DELETE_POINTER(mesh2)
 }
 
-void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& color)
+void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& color, ModelData model)
 {
 	for(int i = 0; i < NUM_OF_DISC_VERTICES; i++)
 	{
@@ -320,13 +423,16 @@ void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& col
 	    
 	    Mesh* mesh = mb.CreateMesh<VertexPCU>(3);
 	    
+	    SetModelBuffer(model);
+		BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
+
 	    DrawMesh(mesh);
 
 		SAFE_DELETE_POINTER(mesh)
 	}
 }
 
-void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& color)
+void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& color, ModelData model)
 {
 	for(int i = 0; i < NUM_OF_DISC_VERTICES; i++)
 	{
@@ -348,7 +454,10 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 		mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(1.0f, 1.0f)));         //3
 
 	    Mesh* mesh = mb.CreateMesh<VertexPCU>(6);
-	    
+
+	    SetModelBuffer(model);
+		BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
+
 	    DrawMesh(mesh);
 
 		SAFE_DELETE_POINTER(mesh)
@@ -357,17 +466,6 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 
 void Renderer::DrawMesh(Mesh* mesh)
 {
-	BufferData bData;
-
-	bData.m_Projection = g_Camera;
-	bData.m_View = Mat4::Identity();
-	bData.m_Model = Mat4::Translation(Vec3(1.0f, 0.0f, 0.0f));
-
-	g_CBO->Map(&bData);
-	g_CBO->Unmap();
-
-	g_CBO->Bind(0);
-
 	m_Context->IASetInputLayout(mesh->m_Layout);
 	mesh->m_VBO->Bind();
 
@@ -393,6 +491,45 @@ ID3D11Device* Renderer::GetDevice() const
 ID3D11DeviceContext* Renderer::GetContext() const
 {
 	return m_Context;
+}
+
+Font* Renderer::CreateBitmapFont(const String& fontPath)
+{
+	Texture* texture = new Texture(fontPath);
+	LOG_CHECK(texture != nullptr) << "Data is null";
+
+	SpriteSheet* bitMapsheet = new SpriteSheet(*texture, 16, 16);
+	LOG_CHECK(bitMapsheet != nullptr) << "Data is null";
+
+	Font* newFont = new Font(*bitMapsheet);
+	LOG_CHECK(newFont != nullptr) << "Data is null";
+
+	return newFont;
+}
+
+Texture* Renderer::GetOrCreateTexture(const String& texturePath)
+{
+	m_DefaultSampler = new Sampler(SAMPLER_BILINEAR);
+	m_DefaultSampler->Initialise();
+
+	if(m_LoadedTextures.find(texturePath) != m_LoadedTextures.end())
+		return m_LoadedTextures[texturePath];
+
+	Texture* texture = new Texture(texturePath);
+
+	m_LoadedTextures[texturePath] = texture;
+
+	//todo below code should be a part of texture constructor or a texture function
+
+	stbi_set_flip_vertically_on_load(1);
+	m_LoadedTextures[texturePath]->m_ImageData = stbi_load(m_LoadedTextures[texturePath]->m_FilePath.c_str(), 
+		&m_LoadedTextures[texturePath]->m_Width, 
+		&m_LoadedTextures[texturePath]->m_Height, 
+		&m_LoadedTextures[texturePath]->m_Channels, 4);
+
+	m_LoadedTextures[texturePath]->Initialise();
+
+	return m_LoadedTextures[texturePath];
 }
 
 #endif

@@ -2,7 +2,8 @@
 
 std::vector<VertexBufferElement> VertexPCU::m_Attributes = {
 	VertexBufferElement("POSITION", MAGNUS_FORMAT_3_FLOAT, offsetof(VertexPCU, m_Pos)),
-	VertexBufferElement("COLOR", MAGNUS_FORMAT_4_FLOAT, offsetof(VertexPCU, m_Color))
+	VertexBufferElement("COLOR", MAGNUS_FORMAT_4_FLOAT, offsetof(VertexPCU, m_Color)),
+	VertexBufferElement("UV", MAGNUS_FORMAT_2_FLOAT, offsetof(VertexPCU, m_UV))
 };
 
 VertexBufferLayout VertexPCU::m_Layout(VertexPCU::m_Attributes);

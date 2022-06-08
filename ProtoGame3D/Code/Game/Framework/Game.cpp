@@ -2,16 +2,7 @@
 
 #include "Engine/Graphics/Renderer.h"
 #include "Engine/Graphics/ShaderDefinition.h"
-#include "Engine/Window/Window.h"
-#include "Engine/Core/EngineCommon.h"
-
 #include "Engine/Input/InputSystem.h"
-#include "Engine/Maths/MathUtils.h"
-
-// Declaring Engine Systems
-
-//--------------------------------------------------------------------------------------------------
-// Creating a Camera
 
 //--------------------------------------------------------------------------------------------------
 
@@ -44,9 +35,9 @@ void Game::Update(float deltaseconds)
 
 void Game::Render()
 {
-	g_Renderer->ClearColor(Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	g_Renderer->ClearScreen(Vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-	g_Renderer->DrawRing(Vec2::ZERO_ZERO, 0.5f, Color::YELLOW);
+	g_Renderer->DrawAABB2(AABB2(Vec2(-2.5f, -2.5f), Vec2(2.5f, 2.5f)), Color::RED);
 }
 
 //--------------------------------------------------------------------------------------------------

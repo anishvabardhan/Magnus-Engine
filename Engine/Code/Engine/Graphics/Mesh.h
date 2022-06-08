@@ -11,7 +11,7 @@ struct VertexBufferLayout;
 struct Mesh
 {
 	ID3D11InputLayout* m_Layout = nullptr;
-	D3D11_INPUT_ELEMENT_DESC m_Attribs[2];
+	D3D11_INPUT_ELEMENT_DESC m_Attribs[3];
 
 	VertexBuffer* m_VBO = nullptr;
 	IndexBuffer* m_IBO = nullptr;

@@ -1,9 +1,13 @@
 #include "HeaderShader.msf"
 
-cbuffer ConstantBuffer : register(b0)
+cbuffer ViewBuffer : register(b0)
 {
     float4x4 Projection;
 	float4x4 View;
+};
+
+cbuffer ModelBuffer : register(b1)
+{
 	float4x4 Model;
 };
 
@@ -18,6 +22,7 @@ VSOutput vsmain(VSInput input)
 	VSOutput output;
 	output.outPos = clipPos;
 	output.outColor = input.inColor;
+	output.outTexCoord = input.inTexCoord;
 
 	return output;
 }

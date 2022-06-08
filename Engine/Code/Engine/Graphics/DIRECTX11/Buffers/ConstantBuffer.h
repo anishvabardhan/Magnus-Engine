@@ -6,19 +6,17 @@
 
 class ConstantBuffer
 {
-	ID3D11Buffer* m_Buffer = nullptr;
 	size_t m_DataByteSize;
+	ID3D11Buffer* m_Buffer = nullptr;
 public:
 	ConstantBuffer();
 	~ConstantBuffer();
 
 	void Init(size_t dataByteSize);
-	void Map(const void* data);
-	void Unmap();
-	void Bind(unsigned int slot);
+	void CopyToGPU(const void* data);
 	void Release();
-};
 
-extern ConstantBuffer* g_CBO;
+	ID3D11Buffer* const GetBuffer();
+};
 
 #endif
