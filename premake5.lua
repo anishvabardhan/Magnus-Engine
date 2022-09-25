@@ -1,9 +1,9 @@
-workspace "ProtoGame3D"
+workspace "BrickBreaker"
     configurations {"Debug", "Development", "Shipping"}
     architecture "x64"
-    startproject "ProtoGame3D"
+    startproject "BrickBreaker"
     warnings "Extra"
-    location ("ProtoGame3D/")
+    location ("BrickBreaker/")
 
     disablewarnings
     {
@@ -40,4 +40,4 @@ EngineSrcDir="Engine/Code/"
 	    	buildoptions { "/Zc:__cplusplus" }
 
 include "Engine.Build.lua"
-include "ProtoGame3D.Build.lua"
+include "BrickBreaker.Build.lua"

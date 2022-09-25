@@ -6,6 +6,7 @@
 #elif DX11_API
 #include <d3d11.h>
 #endif
+
 enum MAGNUS_FORMAT
 {
 	MAGNUS_FORMAT_3_FLOAT = DXGI_FORMAT_R32G32B32_FLOAT,

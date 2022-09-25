@@ -23,9 +23,12 @@ void SwapChain::PostInitialise()
 	m_BackBuffer = new Texture(textureHandle);
 }
 
-void SwapChain::Present(int vsync)
+void SwapChain::Present(bool vsync)
 {
-	m_DeviceSwapChain->Present(vsync, 0);
+	if(vsync)
+		m_DeviceSwapChain->Present(1, 0);
+	else
+		m_DeviceSwapChain->Present(0, 0);
 }
 
 Texture* SwapChain::GetBackBuffer() const

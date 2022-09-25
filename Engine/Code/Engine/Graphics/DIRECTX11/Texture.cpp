@@ -1,4 +1,5 @@
 #include "Engine/Core/LogMessage.h"
+#include "External/stb_image.h"
 #if DX11_API
 
 #include "Texture.h"
@@ -28,6 +29,8 @@ Texture::Texture(ID3D11Texture2D* handle)
 Texture::Texture(String filePath)
 	:m_FilePath(filePath), m_Width(0), m_Height(0), m_Channels(4)
 {
+	stbi_set_flip_vertically_on_load(1);
+	m_ImageData = stbi_load(m_FilePath.c_str(), &m_Width, &m_Height, &m_Channels, 4);
 }
 
 Texture::~Texture()
@@ -60,6 +63,11 @@ void Texture::Initialise()
 	result = g_Renderer->GetDevice()->CreateShaderResourceView(m_Handle, nullptr, &m_SRV);
 
 	LOG_CHECK(SUCCEEDED(result)) << "Couldn't create TextureView!!";
+}
+
+ID3D11Texture2D* Texture::GetHandle() const
+{
+	return m_Handle;
 }
 
 void Texture::Bind(unsigned slot)

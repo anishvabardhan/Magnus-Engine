@@ -1,9 +1,10 @@
-#include "MeshBuilder.h"
+  #include "MeshBuilder.h"
 
 #include "Mesh.h"
 
 MeshBuilder::MeshBuilder()
 {
+	
 }
 
 MeshBuilder::~MeshBuilder()
@@ -11,7 +12,7 @@ MeshBuilder::~MeshBuilder()
 }
 
 template <typename FORMAT>
-Mesh* MeshBuilder::CreateMesh(uint32_t indices)
+Mesh* MeshBuilder::CreateMesh(const unsigned int* indices)
 {
 	Mesh* mesh = new Mesh();
 
@@ -23,11 +24,16 @@ Mesh* MeshBuilder::CreateMesh(uint32_t indices)
 		temp[index] = FORMAT(m_Vertices[index]);
 	}
 
-	mesh->m_Indices = indices;
-	mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), &FORMAT::m_Layout);
+	if(size % 4 == 0)
+	{
+		mesh->m_Indices = 6 * (uint32_t)(size / 4);
+	}
 
-	delete []temp;
+	mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), indices, &FORMAT::m_Layout);
+
+	delete[] temp;
 	temp = nullptr;
 
 	return mesh;
 }
+

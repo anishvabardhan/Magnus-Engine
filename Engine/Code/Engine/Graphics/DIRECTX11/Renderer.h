@@ -52,10 +52,9 @@ public:
 	void ShutDown();
 
 	void CreateDeviceAndSwapChain();
-	void Present(UINT vsync);
+	void Present(bool vsync);
 	void CreateRenderTarget(Vec2 texel);
-	//todo add in a rendertarget parameter to SetRendertarget
-	void SetRenderTargets();
+	void SetRenderTarget(TextureView* renderTarget);
 	void SetViewport();
 	void SetCamera();
 	void SwappingBuffers();
@@ -78,6 +77,7 @@ public:
 	void Drawtext(const Vec2& position, const Vec4& color, const String& asciiText, float quadHeight, Font* font = nullptr, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 	void DrawAABB2(const AABB2& aabb2, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 	void DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 	void DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 	void DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 	void DrawDisc(const Vec2& center, const float& radius, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});

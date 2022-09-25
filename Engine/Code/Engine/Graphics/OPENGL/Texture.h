@@ -6,7 +6,7 @@
 #include <map>
 
 #include "Engine/Core/CoreIncludes.h"
-#include "Engine/Graphics/GLFunctions.h"
+#include "GLFunctions.h"
 
 enum TEXTURESLOT {
 	SLOT0  = GL_TEXTURE0,

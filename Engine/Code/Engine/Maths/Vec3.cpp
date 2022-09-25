@@ -81,6 +81,21 @@ bool Vec3::operator!=(const Vec3& other)
 	return !(*this == other);
 }
 
+float Vec3::GetLength() const
+{
+	return sqrtf((m_X * m_X) + (m_Y * m_Y) + (m_Z * m_Z));
+}
+
+Vec3 Vec3::GetNormalised() const
+{
+	Vec3 temp;
+	float length = GetLength();
+	temp.m_X = m_X / length;
+	temp.m_Y = m_Y / length;
+	temp.m_Z = m_Z / length;
+	return temp; 
+}
+
 std::ostream& operator<<(std::ostream& stream, const Vec3& vector)
 {
 	stream << "(" << vector.m_X << ", " << vector.m_Y << ", " << vector.m_Z << ")";

@@ -1,0 +1,20 @@
+struct VSOutput
+{
+	float4 outPos : SV_POSITION;
+	float4 outColor : COLOR;
+	float2 outTexCoord : UV;
+};
+
+struct VSInput
+{
+	float3 inPosition : POSITION;
+	float4 inColor : COLOR;
+	float2 inTexCoord : UV;
+};
+
+struct PSInput
+{
+	float4 position : SV_POSITION;
+	float4 color : COLOR;
+	float2 uv : UV;
+};

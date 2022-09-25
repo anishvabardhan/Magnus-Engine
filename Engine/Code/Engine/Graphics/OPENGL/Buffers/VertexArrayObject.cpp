@@ -3,7 +3,7 @@
 #include "VertexArrayObject.h"
 
 #include "Engine/Graphics/Vertex.h"
-#include "Engine/Graphics/GLFunctions.h"
+#include "Engine/Graphics/OPENGL/GLFunctions.h"
 
 VertexArrayObject::VertexArrayObject()
 {

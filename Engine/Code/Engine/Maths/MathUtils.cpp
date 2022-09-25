@@ -3,6 +3,7 @@
 #include "AABB2.h"
 #include "Maths_Func.h"
 #include"Vec2.h"
+#include "Vec3.h"
 
 float Clamp(float value, float min, float max)
 {
@@ -27,6 +28,16 @@ float CosDegrees(float degrees)
 float SinDegrees(float degrees)
 {
 	return sinf(toRadians(degrees));
+}
+
+float DotProduct(const Vec3& a, const Vec3& b)
+{
+    return ((a.m_X * b.m_X) + (a.m_Y * b.m_Y) + (a.m_Z * b.m_Z));
+}
+
+float TanDegrees(float degrees)
+{
+	return tanf(toRadians(degrees));
 }
 
 float Atan2Degrees(float y, float x)

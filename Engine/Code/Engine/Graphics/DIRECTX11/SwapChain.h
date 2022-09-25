@@ -16,7 +16,7 @@ public:
 	~SwapChain();
 
 	void PostInitialise();
-	void Present(int vsync);
+	void Present(bool vsync);
 	Texture* GetBackBuffer() const;
 };
 

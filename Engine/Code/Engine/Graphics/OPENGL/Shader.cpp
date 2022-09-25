@@ -5,7 +5,6 @@
 #include "ShaderDefinition.h"
 #include "Engine/Core/CoreIncludes.h"
 #include "Renderer.h"
-#include "..\DIRECTX11\Shader.h"
 
 Shader::Shader(ShaderDefinition* shaderDef)
 	: m_RendererID(0)

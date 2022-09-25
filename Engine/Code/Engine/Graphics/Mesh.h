@@ -16,10 +16,10 @@ struct Mesh
 	VertexBuffer* m_VBO = nullptr;
 	IndexBuffer* m_IBO = nullptr;
 
-	uint32_t m_Indices = 6;
+	uint32_t m_Indices = 3;
 
 	Mesh();
 	~Mesh();
 
-	void CopyToGPU(const void* data, uint32_t arraySize, VertexBufferLayout* layout);
+	void CopyToGPU(const void* data, uint32_t arraySize, const unsigned int* indices, VertexBufferLayout* layout);
 };

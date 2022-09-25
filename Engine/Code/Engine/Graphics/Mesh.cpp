@@ -1,5 +1,7 @@
 #include "Mesh.h"
 
+#if DX11_API
+
 #include "Engine/Core/LogMessage.h"
 #include "DIRECTX11/Buffers/VertexBuffer.h"
 #include "DIRECTX11/Buffers/IndexBuffer.h"
@@ -19,7 +21,7 @@ Mesh::~Mesh()
 	SAFE_RELEASE(m_Layout)
 }
 
-void Mesh::CopyToGPU(const void* data, uint32_t arraySize, VertexBufferLayout* layout)
+void Mesh::CopyToGPU(const void* data, uint32_t arraySize, const unsigned int* indices, VertexBufferLayout* layout)
 {
 	m_VBO->Load(data, 9, arraySize);
 
@@ -43,16 +45,11 @@ void Mesh::CopyToGPU(const void* data, uint32_t arraySize, VertexBufferLayout* l
 	const char layoutDebugName[] = "InputLayout";
     m_Layout->SetPrivateData( WKPDID_D3DDebugObjectName, _countof( layoutDebugName ),layoutDebugName );
 #endif
-	if(m_Indices == 6)
+	if(m_Indices > 3)
 	{
 	    m_IBO = new IndexBuffer();
-	    
-	    const unsigned int indices[] =
-	    {
-	    	0, 1, 2,
-	    	2, 3, 0
-	    };
-
-	    m_IBO->Load(indices, _countof(indices));
+	    m_IBO->Load(indices, m_Indices);
 	}
 }
+
+#endif

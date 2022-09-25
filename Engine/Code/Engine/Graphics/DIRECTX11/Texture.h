@@ -4,7 +4,6 @@
 #if DX11_API
 
 #include <d3d11.h>
-// todo seperate textureview in a different class
 
 class Texture
 {
@@ -20,7 +19,6 @@ class Texture
 	int m_Channels;
 public:
 	friend class TextureView;
-	friend class Renderer;
 
 	Texture(D3D11_TEXTURE2D_DESC desc);
 	Texture(ID3D11Texture2D* handle);
@@ -29,6 +27,8 @@ public:
 
 	void Initialise();
 	void Bind(unsigned int slot);
+
+	ID3D11Texture2D* GetHandle() const;
 };
 
 #endif
