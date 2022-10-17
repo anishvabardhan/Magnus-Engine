@@ -2,6 +2,7 @@
 #include "VertexBuffer.h"
 
 #include "Engine/Graphics/GLFunctions.h"
+#include "..\..\DIRECTX11\Buffers\VertexBuffer.h"
 
 VertexBuffer::VertexBuffer(const void* data, unsigned int size)
 	: m_RendererID(0)

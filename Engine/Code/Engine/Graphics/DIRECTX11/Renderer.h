@@ -1,31 +1,49 @@
 #pragma once
+#include "Shader.h"
 
 #if DX11_API
 
 #include <d3d11.h>
 
 #include "Engine/Core/CoreIncludes.h"
-
+#include "Buffers/ConstantBuffer.h"
+#include "RendererStruct.h"
 
 #define SAFE_RELEASE(ptr) if(ptr != nullptr) {ptr->Release(); ptr = nullptr;}
-#define DEBUG_LAYER 0
-
 
 class Texture;
+class TextureView;
+class Sampler;
 class Font;
 class FrameBuffer;
+class VertexShader;
+class PixelShader;
+struct MeshBuilder;
 struct Mesh;
+class Shader;
+class ConstantBuffer;
+class Camera;
+class SwapChain;
 
 class Renderer
 {
 	ID3D11Device* m_Device = nullptr;
 	ID3D11DeviceContext* m_Context = nullptr;
 
-	IDXGIAdapter* m_DXGIAdapter = nullptr;
-	IDXGIFactory* m_DXGIFactory = nullptr;
-	IDXGISwapChain* m_SwapChain = nullptr;
+	SwapChain* m_SwapChain = nullptr;
+	TextureView* m_RenderTargetView = nullptr;
 
-	D3D_FEATURE_LEVEL m_FeatureLevel;
+	ConstantBuffer m_ModelCBO;
+	ConstantBuffer m_CameraCBO;
+
+	Shader* m_Shader = nullptr;
+	Camera* m_Camera = nullptr;
+
+	Texture* m_RenderTarget = nullptr;
+	Texture* m_DefaultTexture = nullptr;
+	Sampler* m_DefaultSampler = nullptr;
+
+	std::map<String, Texture*> m_LoadedTextures;
 public:
 	Renderer();
 	~Renderer();
@@ -33,35 +51,51 @@ public:
 	void StartUp();
 	void ShutDown();
 
-	void CreateDevice();
-	void CreatSwapChain();
-	void Present(UINT vsync);
-
+	void CreateDeviceAndSwapChain();
+	void Present(bool vsync);
+	void CreateRenderTarget(Vec2 texel);
+	void SetRenderTarget(TextureView* renderTarget);
+	void SetViewport();
+	void SetCamera();
 	void SwappingBuffers();
+	void CopyResource(Texture* source, Texture* dest = nullptr);
 
 	void BindDefaultShader();
 	void BindFont(const Font* font, int textureSlot);
 	void BindTexture(const Texture* texture = nullptr, int textureSlot = 0);
 
 	// MVP UNIFORMS UPDATION METHODS
-	void SetCameraUniform(const Mat4& camera);
-	void SetModelTranslation(const Mat4& transform = Mat4::Identity());
+	void SetCameraBuffer(const ViewData& data);
+	void SetModelBuffer(const ModelData& data);
+	void BindBufferSlot(unsigned int slot, ID3D11Buffer* buffer);
 
 	void CopyFrameBuffer(FrameBuffer* current, FrameBuffer* next);
 
-	void ClearColor(const Vec4& color = Color::CLEAR_COLOR) const;
+	void ClearScreen(const Vec4& color = Color::CLEAR_COLOR) const;
 	
 	// DRAW CALL METHODS
-	void Drawtext(const Vec2& position, const Vec4& color, const String& asciiText, float quadHeight, Font* font);
-	void DrawAABB2(const AABB2& aabb2, const Vec4& color);
-	void DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color);
-	void DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color);
-	void DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color);
-	void DrawDisc(const Vec2& center, const float& radius, const Vec4& color);
+	void Drawtext(const Vec2& position, const Vec4& color, const String& asciiText, float quadHeight, Font* font = nullptr, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawAABB2(const AABB2& aabb2, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawDisc(const Vec2& center, const float& radius, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawRing(const Vec2& center, const float& radius, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 
-	void DrawRing(const Vec2& center, const float& radius, const Vec4& color);
 	void DrawMesh(Mesh* mesh);
+	void DrawMeshWithIndices(Mesh* mesh, const unsigned int* indices, const int numOfIndices);
+
+	ID3D11Device* GetDevice() const;
+	ID3D11DeviceContext* GetContext() const;
+
+	void* GetShaderByteCode() { return m_Shader->m_VSBlob->GetBufferPointer(); }
+	size_t GetShaderByteSize() { return m_Shader->m_VSBlob->GetBufferSize(); }
+private:
+	Texture* GetOrCreateTexture(const String& texturePath);
+	Font* CreateBitmapFont(const String& fontPath);
 };
 
 extern Renderer* g_Renderer;
+
 #endif

@@ -1,35 +1,28 @@
 ﻿#pragma once
 
 #include "Engine/Core/CoreIncludes.h"
+#if OPENGL_API
 #include "Engine/Graphics/OPENGL/GLFunctions.h"
+#elif DX11_API
+#include <d3d11.h>
+#endif
 
-enum DATATYPE {
-	APEX_FLOAT,           
-	APEX_UNSIGNED_INT,    
-	APEX_UNSIGNED_BYTE   
+enum MAGNUS_FORMAT
+{
+	MAGNUS_FORMAT_3_FLOAT = DXGI_FORMAT_R32G32B32_FLOAT,
+	MAGNUS_FORMAT_4_FLOAT = DXGI_FORMAT_R32G32B32A32_FLOAT,
+	MAGNUS_FORMAT_2_FLOAT = DXGI_FORMAT_R32G32_FLOAT
 };
 
 struct VertexPCU;
 
 struct VertexBufferElement
 {
-	unsigned int m_Type;
-	unsigned int m_ElementCount;
-	unsigned char m_Normalized;
+	std::string m_SemanticName;
+	MAGNUS_FORMAT m_Format;
+	unsigned int m_AlignedOffset;
 
-	static unsigned int GetSizeOfType(unsigned int type)
-	{
-		switch (type)
-		{
-		case APEX_FLOAT:           return 4;
-		case APEX_UNSIGNED_INT:    return 4;
-		case APEX_UNSIGNED_BYTE:   return 1;
-		}
-
-		return 0;
-	}
-
-	VertexBufferElement(unsigned int type, unsigned int count, unsigned char normalized);
+	VertexBufferElement(std::string semanticName, MAGNUS_FORMAT format, unsigned int alignedOffset);
 };
 
 struct VertexBufferLayout
@@ -37,7 +30,7 @@ struct VertexBufferLayout
 	std::vector<VertexBufferElement> m_Element;
 	unsigned int m_Stride;
 
-	VertexBufferLayout(const std::vector<VertexBufferElement> element, unsigned int stride);
+	VertexBufferLayout(const std::vector<VertexBufferElement> element);
 };
 
 struct VertexMaster

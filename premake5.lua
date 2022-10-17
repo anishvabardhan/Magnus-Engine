@@ -1,21 +1,30 @@
-workspace "ProtoGame3D"
+workspace "BrickBreaker"
     configurations {"Debug", "Development", "Shipping"}
     architecture "x64"
-    startproject "ProtoGame3D"
+    startproject "BrickBreaker"
     warnings "Extra"
-    location ("ProtoGame3D/")
+    location ("BrickBreaker/")
 
     disablewarnings
     {
     	"4100",
-        "4201"
+      "4201"
     }
 
     defines
     {
-        "OPENGL_API=0",
-        "DX11_API=1"
+      "OPENGL_API=0",
+      "DX11_API=1"
     }
+
+    configuration "Debug"
+       defines {"MAGNUS_DEBUG=1"}
+
+    configuration "Development"
+       defines {"MAGNUS_DEV=1"}
+    
+    configuration "Shipping"
+       defines {"MAGNUS_SHIP=1"}
 
 BinaryDir="%{wks.location}/Run/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"
 IntermediateDir="%{wks.location}/Temporary/%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}/"
@@ -31,4 +40,4 @@ EngineSrcDir="Engine/Code/"
 	    	buildoptions { "/Zc:__cplusplus" }
 
 include "Engine.Build.lua"
-include "ProtoGame3D.Build.lua"
+include "BrickBreaker.Build.lua"

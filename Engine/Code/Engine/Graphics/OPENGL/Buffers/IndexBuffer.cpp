@@ -3,8 +3,6 @@
 
 #include "Engine/Graphics/OPENGL/GLFunctions.h"
 
-// TODO exclude all gl based files, copy-paste renderer file and make one for DX11, similarly for buffers and shaders and textures
-
 IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count)
     : m_Count(count)
 {

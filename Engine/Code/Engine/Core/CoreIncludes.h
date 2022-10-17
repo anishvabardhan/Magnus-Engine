@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Engine/Core/CoreMACROS.h"
+#include "CoreMACROS.h"
+#include "EngineBuild.h"
 #include "Engine/Maths/AABB2.h"
+#include "Engine/Maths/AABB3.h"
 #include "Engine/Maths/Mat4.h"
 #include "Engine/Maths/Random.h"
 #include "Engine/Maths/Disc2D.h"

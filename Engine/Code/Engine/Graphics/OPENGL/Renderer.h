@@ -5,7 +5,7 @@
 #include "Engine/Core/Color.h"
 #include "Engine/Window/Window.h"
 #include "Engine/Core/CoreIncludes.h"
-#include "Engine/Graphics/GLFunctions.h"
+#include "GLFunctions.h"
 
 class Shader;
 class ShaderDefinition;

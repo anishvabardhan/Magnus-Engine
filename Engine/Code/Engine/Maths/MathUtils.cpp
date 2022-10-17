@@ -3,6 +3,7 @@
 #include "AABB2.h"
 #include "Maths_Func.h"
 #include"Vec2.h"
+#include "Vec3.h"
 
 float Clamp(float value, float min, float max)
 {
@@ -21,12 +22,22 @@ float Clamp(float value, float min, float max)
 
 float CosDegrees(float degrees)
 {
-	return cos(toRadians(degrees));
+	return cosf(toRadians(degrees));
 }
 
 float SinDegrees(float degrees)
 {
-	return sin(toRadians(degrees));
+	return sinf(toRadians(degrees));
+}
+
+float DotProduct(const Vec3& a, const Vec3& b)
+{
+    return ((a.m_X * b.m_X) + (a.m_Y * b.m_Y) + (a.m_Z * b.m_Z));
+}
+
+float TanDegrees(float degrees)
+{
+	return tanf(toRadians(degrees));
 }
 
 float Atan2Degrees(float y, float x)
@@ -56,4 +67,13 @@ bool Disc_AABB2Collision(const Vec2& center, const float& radius, AABB2& box)
 	float radSquared = radius * radius;
 
 	return (distSquared <= radSquared);
+}
+
+float Interpolate(const float& start, const float& end, float delta)
+{
+	float range = end - start;
+
+	float fractionValue = delta * range;
+
+	return fractionValue + start;
 }

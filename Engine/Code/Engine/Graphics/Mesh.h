@@ -1,28 +1,25 @@
 #pragma once
 
-#include "Engine/Graphics/OPENGL/GLFunctions.h"
+#include <d3d11.h>
 
-struct VertexBufferLayout;
+#include "Engine/Core/CoreIncludes.h"
+
 class VertexBuffer;
 class IndexBuffer;
-
-enum DRAW_TYPE{
-	PRIMITIVE_TRIANGLES
-};
+struct VertexBufferLayout;
 
 struct Mesh
 {
-	int m_Indices = 6;
+	ID3D11InputLayout* m_Layout = nullptr;
+	D3D11_INPUT_ELEMENT_DESC m_Attribs[3];
+	unsigned int m_NumOfVertices;
+
 	VertexBuffer* m_VBO = nullptr;
-	VertexBufferLayout* m_Layout = nullptr;
-	const void* m_Data = nullptr;
-	DRAW_TYPE m_DrawType;
 	IndexBuffer* m_IBO = nullptr;
 
-	Mesh(const void* data, VertexBufferLayout* layout);
+	Mesh();
 	~Mesh();
 
-	void CopyToGPU();
-	void Begin(DRAW_TYPE drawType);
-	void End();
+	void CopyToGPU(const void* data, uint32_t arraySize, unsigned int numOfVertices, VertexBufferLayout* layout);
+	void SetIndices(const unsigned int* indices, const unsigned int numOfIndices);
 };

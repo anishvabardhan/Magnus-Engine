@@ -31,5 +31,10 @@ public:
 	bool operator==(const Vec3& other);
 	bool operator!=(const Vec3& other);
 
+    float GetLength() const;
+	Vec3 GetNormalised() const;
+
 	friend std::ostream& operator<<(std::ostream& stream, const Vec3& vector);
 };
+
+Vec3 Interpolate(const Vec3& start, const Vec3& end, float delta);

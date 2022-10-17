@@ -13,7 +13,7 @@ project "ProtoGame3D"
         "ProtoGame3D/Code/**.cpp",
         "ProtoGame3D/Data/Materials/**.xml",
         "ProtoGame3D/Data/Textures/**.png",
-        "ProtoGame3D/Data/Shaders/**.shader"
+        "ProtoGame3D/Data/Shaders/**.msf"
     }
 
     includedirs
@@ -28,7 +28,8 @@ project "ProtoGame3D"
         "Engine",
         "d3d11.lib",
         "dxgi.lib",
-        "d3dcompiler.lib"
+        "d3dcompiler.lib",
+        "dxguid.lib"
     }
 
     filter "system:windows"

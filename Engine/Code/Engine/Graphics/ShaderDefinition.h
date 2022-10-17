@@ -2,8 +2,6 @@
 
 #include "Engine/Core/CoreIncludes.h"
 
-
-
 class ShaderDefinition
 {
 public:

@@ -1,7 +1,10 @@
 #pragma once
 
+class Camera;
+
 class Game
 {
+	Camera* m_Camera = nullptr;
 public:
 	Game();
 	~Game();

@@ -1,10 +1,11 @@
 #pragma once
-#pragma warning( disable : 4201)
 
 #include "Vec2.h"
 #include "Vec3.h"
 #include "Vec4.h"
 #include "Maths_Func.h"
+
+//todo Update the matrix library
 
 struct Mat4
 {
@@ -34,12 +35,13 @@ struct Mat4
 	};
 
 	constexpr Mat4();
+	explicit Mat4(float* matrixValues);
 
 	static constexpr Mat4 Identity() { return Mat4();}
 	static Mat4 Inverse(const Mat4& matrix);
 
 	Mat4& Multiply(const Mat4& other);
-
+	void Transpose();
 	Mat4& operator*(const Mat4& other);
 	Mat4& operator*=(const Mat4& other);
 	bool operator==(const Mat4& other);
@@ -50,7 +52,12 @@ struct Mat4
 
 	static Mat4 Translation(const Vec3& translation);
 	static Mat4 Rotation2D(float angle);
+	static Mat4 RotationX3D(float rotateX);
+	static Mat4 RotationY3D(float rotateY);
+	static Mat4 RotationZ3D(float rotateZ);
+	static Mat4 Rotation3D(float x, float y, float z);
 	static Mat4 Scale(const Vec3& scale);
+	static Mat4 InvertFast(Mat4& matrix);
 };
 
 constexpr Mat4::Mat4()

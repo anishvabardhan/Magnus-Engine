@@ -1,6 +1,7 @@
 #include "Vec3.h"
 
 #include "Engine/Core/CoreMACROS.h"
+#include "MathUtils.h"
 
 STATIC const Vec3 Vec3::ZERO;
 STATIC const Vec3 Vec3::ONE = Vec3(1.0f, 1.0f, 1.0f);
@@ -80,8 +81,34 @@ bool Vec3::operator!=(const Vec3& other)
 	return !(*this == other);
 }
 
+float Vec3::GetLength() const
+{
+	return sqrtf((m_X * m_X) + (m_Y * m_Y) + (m_Z * m_Z));
+}
+
+Vec3 Vec3::GetNormalised() const
+{
+	Vec3 temp;
+	float length = GetLength();
+	temp.m_X = m_X / length;
+	temp.m_Y = m_Y / length;
+	temp.m_Z = m_Z / length;
+	return temp; 
+}
+
 std::ostream& operator<<(std::ostream& stream, const Vec3& vector)
 {
 	stream << "(" << vector.m_X << ", " << vector.m_Y << ", " << vector.m_Z << ")";
 	return stream;
+}
+
+Vec3 Interpolate(const Vec3& start, const Vec3& end, float delta)
+{
+	Vec3 temp;
+
+	temp.m_X = Interpolate(start.m_X, end.m_X, delta);
+	temp.m_Y = Interpolate(start.m_Y, end.m_Y, delta);
+	temp.m_Z = Interpolate(start.m_Z, end.m_Z, delta);
+
+	return temp;
 }

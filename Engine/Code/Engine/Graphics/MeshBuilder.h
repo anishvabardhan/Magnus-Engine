@@ -1,26 +1,21 @@
 #pragma once
 
-#include "Engine/Core/CoreIncludes.h"
 #include "Vertex.h"
+
+#include <vector>
 
 struct Mesh;
 
 struct MeshBuilder
 {
-	Vec4 m_Color;
-	VertexMaster m_VertMast;
+	Mesh* m_Mesh = nullptr;
 	std::vector<VertexMaster> m_Vertices;
 
 	MeshBuilder();
 	~MeshBuilder();
 
-	void Color3f(Vec4 color);
-	void TexCoord2f(Vec2 uv);
-	void Position3f(Vec3 position);
-	void Vert(const VertexMaster& master);
-
 	template<typename FORMAT>
-	Mesh* CreateMesh();
+	Mesh* CreateMesh(unsigned int numOfVertices = 0);
 };
 
-template Mesh* MeshBuilder::CreateMesh<VertexPCU>();
+template Mesh* MeshBuilder::CreateMesh<VertexPCU>(unsigned int numOfVertices);

@@ -1,17 +1,23 @@
 #pragma once
 
+#include "Engine/Core/CoreIncludes.h"
+
 #if DX11_API
+
+#include <d3d11.h>
 
 class IndexBuffer
 {
-	unsigned int m_RendererID;
+	ID3D11Buffer* m_Buffer = nullptr;
+
 	unsigned int m_Count;
 public:
-	explicit IndexBuffer(const unsigned int* data, unsigned int count);
+	IndexBuffer();
 	~IndexBuffer();
 
-	void Bind() const;
-	void UnBind() const;
+	void Load(const void* data, unsigned int count);
+	void Bind();
+	void Release();
 
 	inline unsigned int GetCount() const { return m_Count; }
 };

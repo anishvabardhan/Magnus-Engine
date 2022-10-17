@@ -33,3 +33,5 @@ protected:
 public:
 	bool GetMouse[256];
 };
+
+extern Window* g_Window;

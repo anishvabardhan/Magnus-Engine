@@ -2,7 +2,7 @@
 
 #include "Engine/Platform/WindowsH.h"
 #include "Engine/Core/CoreIncludes.h"
-#include "Engine/Graphics/GLFunctions.h"
+#include "GLFunctions.h"
 
 //-----------------------------------------------------------------------------------------------
 // General GL Function pointers

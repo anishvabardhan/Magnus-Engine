@@ -1,16 +1,22 @@
 #pragma once
 
+#include "Engine/Core/CoreIncludes.h"
+
 #if DX11_API
+
+#include <d3d11.h>
 
 class VertexBuffer
 {
-	unsigned int m_RendererID;
+	ID3D11Buffer* m_Buffer = nullptr;
+	uint32_t m_VertexSize;
 public:
-	explicit VertexBuffer(const void* data, unsigned int size);
+	VertexBuffer();
 	~VertexBuffer();
 
-	void Bind() const;
-	void UnBind() const;
+	void Load(const void* data, uint32_t vertexSize, uint32_t arraySize);
+	void Bind();
+	void Release();
 };
 
 #endif
