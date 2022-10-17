@@ -12,7 +12,7 @@ MeshBuilder::~MeshBuilder()
 }
 
 template <typename FORMAT>
-Mesh* MeshBuilder::CreateMesh(const unsigned int* indices)
+Mesh* MeshBuilder::CreateMesh(unsigned int numOfVertices)
 {
 	Mesh* mesh = new Mesh();
 
@@ -24,12 +24,7 @@ Mesh* MeshBuilder::CreateMesh(const unsigned int* indices)
 		temp[index] = FORMAT(m_Vertices[index]);
 	}
 
-	if(size % 4 == 0)
-	{
-		mesh->m_Indices = 6 * (uint32_t)(size / 4);
-	}
-
-	mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), indices, &FORMAT::m_Layout);
+	mesh->CopyToGPU(temp, (uint32_t)size * sizeof(FORMAT), numOfVertices, &FORMAT::m_Layout);
 
 	delete[] temp;
 	temp = nullptr;

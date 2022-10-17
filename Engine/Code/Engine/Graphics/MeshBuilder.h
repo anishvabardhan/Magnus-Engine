@@ -15,7 +15,7 @@ struct MeshBuilder
 	~MeshBuilder();
 
 	template<typename FORMAT>
-	Mesh* CreateMesh(const unsigned int* indices = nullptr);
+	Mesh* CreateMesh(unsigned int numOfVertices = 0);
 };
 
-template Mesh* MeshBuilder::CreateMesh<VertexPCU>(const unsigned int* indices);
+template Mesh* MeshBuilder::CreateMesh<VertexPCU>(unsigned int numOfVertices);

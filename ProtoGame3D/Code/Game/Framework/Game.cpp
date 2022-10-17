@@ -36,7 +36,7 @@ void Game::Update(float deltaseconds)
 	UNUSED(deltaseconds)
 		
 	x += deltaseconds;
-	m.m_Model =  Mat4::Translation(Vec3(0.0f, 0.0f, 25.0f)) * Mat4::RotationY3D(x) * Mat4::RotationX3D(0) * Mat4::RotationZ3D(0);
+	m.m_Model =  Mat4::Translation(Vec3(0.0f, 0.0f, 25.0f)) * Mat4::RotationY3D(0) * Mat4::RotationX3D(0) * Mat4::RotationZ3D(0);
 
 	m_Camera->Update(deltaseconds);
 }
@@ -48,7 +48,7 @@ void Game::Render()
 {
 	g_Renderer->ClearScreen(Vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-	g_Renderer->DrawCube(Vec3(0.0f, 0.0f, 0.0f), Vec3(2.0f, 2.0f, 2.0f), Color::BLUE, m);
+	g_Renderer->DrawCube(Vec3(0.0f, 0.0f, 0.0f), Vec3(2.0f, 2.0f, 2.0f), Color::BLACK, m);
 }
 
 //--------------------------------------------------------------------------------------------------

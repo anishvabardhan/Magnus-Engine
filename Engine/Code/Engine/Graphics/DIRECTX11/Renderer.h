@@ -84,6 +84,7 @@ public:
 	void DrawRing(const Vec2& center, const float& radius, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 
 	void DrawMesh(Mesh* mesh);
+	void DrawMeshWithIndices(Mesh* mesh, const unsigned int* indices, const int numOfIndices);
 
 	ID3D11Device* GetDevice() const;
 	ID3D11DeviceContext* GetContext() const;

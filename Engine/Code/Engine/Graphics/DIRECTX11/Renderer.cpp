@@ -156,7 +156,7 @@ void Renderer::CreateDeviceAndSwapChain()
 	D3D11_RASTERIZER_DESC RasDesc = {};
 	RasDesc.FrontCounterClockwise = true;
 	RasDesc.FillMode = D3D11_FILL_SOLID;
-	RasDesc.CullMode = D3D11_CULL_FRONT;
+	RasDesc.CullMode = D3D11_CULL_BACK;
 
 	ID3D11RasterizerState* RastState = nullptr;
 
@@ -289,16 +289,16 @@ void Renderer::Drawtext(const Vec2& position, const Vec4& color, const String& a
 
 	    const unsigned int indices[] =
 	    {
-	    	2, 3, 0,
-	    	0, 3, 1
+	    	3, 2, 1,
+	    	1, 0, 3
 	    };
 
-	    Mesh* mesh = mb.CreateMesh<VertexPCU>(indices);
+	    Mesh* mesh = mb.CreateMesh<VertexPCU>();
 		
 	    SetModelBuffer(model);
 		BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 		 
-	    DrawMesh(mesh);
+	    DrawMeshWithIndices(mesh, indices, _countof(indices));
 	    
 	    SAFE_DELETE_POINTER(mesh)
 		SAFE_DELETE_POINTER(f)
@@ -311,21 +311,21 @@ void Renderer::DrawAABB2(const AABB2& aabb2, const Vec4& color, ModelData model)
 
 	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(0.0f, 0.0f))); //0
 	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Mins.m_Y, 0.0f), color, Vec2(1.0f, 0.0f))); //1
-	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //2
-	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 1.0f))); //3
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Maxs.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(1.0f, 1.0f))); //2
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(aabb2.m_Mins.m_X, aabb2.m_Maxs.m_Y, 0.0f), color, Vec2(0.0f, 1.0f))); //3
 
 	const unsigned int indices[] =
 	{
-		2, 3, 0,
-		0, 3, 1
+		0, 1, 2,
+		2, 3, 0
 	};
 
-	Mesh* mesh = mb.CreateMesh<VertexPCU>(indices);
+	Mesh* mesh = mb.CreateMesh<VertexPCU>();
 	
 	SetModelBuffer(model);
 	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
-	DrawMesh(mesh);
+	DrawMeshWithIndices(mesh, indices, _countof(indices));
 
 	SAFE_DELETE_POINTER(mesh)
 }
@@ -354,68 +354,68 @@ void Renderer::DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& 
 	float dimHalfZ = dimensions.m_Z * 0.5f;
 
 	Vec3 vertices[] = {
-		Vec3(center.m_X + dimHalfX, center.m_Y - dimHalfY, center.m_Z - dimHalfZ), // 0
-		Vec3(center.m_X - dimHalfX, center.m_Y - dimHalfY, center.m_Z - dimHalfZ), // 1
+		Vec3(center.m_X - dimHalfX, center.m_Y - dimHalfY, center.m_Z - dimHalfZ), // 0
+		Vec3(center.m_X + dimHalfX, center.m_Y - dimHalfY, center.m_Z - dimHalfZ), // 1
 		Vec3(center.m_X + dimHalfX, center.m_Y + dimHalfY, center.m_Z - dimHalfZ), // 2
 		Vec3(center.m_X - dimHalfX, center.m_Y + dimHalfY, center.m_Z - dimHalfZ), // 3
 		Vec3(center.m_X - dimHalfX, center.m_Y - dimHalfY, center.m_Z + dimHalfZ), // 4
 		Vec3(center.m_X + dimHalfX, center.m_Y - dimHalfY, center.m_Z + dimHalfZ), // 5
-		Vec3(center.m_X - dimHalfX, center.m_Y + dimHalfY, center.m_Z + dimHalfZ), // 6 
-		Vec3(center.m_X + dimHalfX, center.m_Y + dimHalfY, center.m_Z + dimHalfZ)  // 7
+		Vec3(center.m_X + dimHalfX, center.m_Y + dimHalfY, center.m_Z + dimHalfZ), // 6 
+		Vec3(center.m_X - dimHalfX, center.m_Y + dimHalfY, center.m_Z + dimHalfZ)  // 7
 	};
 
-	// BACK SIDE
+	// FRONT SIDE
 	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::RED, Vec2::ZERO_ZERO));          //0
 	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::RED, Vec2::ONE_ZERO));           //1
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::RED, Vec2::ZERO_ONE));           //2
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::RED, Vec2::ONE_ONE));            //3
-	
-	// LEFT SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::GREEN,  Vec2::ZERO_ZERO));       //4
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::GREEN,  Vec2::ONE_ZERO));        //5
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::GREEN,  Vec2::ZERO_ONE));        //6
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::GREEN,  Vec2::ONE_ONE));         //7
-
-	// FRONT SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::YELLOW, Vec2::ZERO_ZERO));       //8
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::YELLOW, Vec2::ONE_ZERO));        //9
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::YELLOW, Vec2::ZERO_ONE));        //10
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::YELLOW, Vec2::ONE_ONE));         //11
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::RED, Vec2::ONE_ONE));            //2
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::RED, Vec2::ZERO_ONE));           //3
 	
 	// RIGHT SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::BLUE, Vec2::ZERO_ZERO));         //12
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::BLUE, Vec2::ONE_ZERO)); 	     //13
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::BLUE, Vec2::ZERO_ONE)); 	     //14
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::BLUE, Vec2::ONE_ONE));  		 //15
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::GREEN,  Vec2::ZERO_ZERO));       //4
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::GREEN,  Vec2::ONE_ZERO));        //5
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::GREEN,  Vec2::ONE_ONE));         //6
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::GREEN,  Vec2::ZERO_ONE));        //7
+	
+	// BACK SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::YELLOW, Vec2::ZERO_ZERO));       //8
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::YELLOW, Vec2::ONE_ZERO));        //9
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::YELLOW, Vec2::ONE_ONE));         //10
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::YELLOW, Vec2::ZERO_ONE));        //11
+	
+	// RIGHT SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::BLUE, Vec2::ZERO_ZERO));         //12
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::BLUE, Vec2::ONE_ZERO)); 	     //13
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::BLUE, Vec2::ONE_ONE)); 	         //14
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::BLUE, Vec2::ZERO_ONE));  		 //15
 	
 	// DOWN SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::MAGENTA, Vec2::ZERO_ZERO));      //16
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::MAGENTA, Vec2::ONE_ZERO));       //17
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::MAGENTA, Vec2::ZERO_ONE));       //18
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::MAGENTA, Vec2::ONE_ONE));        //19
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::WHITE, Vec2::ZERO_ZERO));        //16
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::WHITE, Vec2::ONE_ZERO));         //17
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::WHITE, Vec2::ONE_ONE));          //18
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::WHITE, Vec2::ZERO_ONE));         //19
 	
 	// TOP SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::WHITE, Vec2::ZERO_ZERO));        //20
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::WHITE, Vec2::ONE_ZERO));         //21
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::WHITE, Vec2::ZERO_ONE));         //22
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::WHITE, Vec2::ONE_ONE));          //23
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::MAGENTA, Vec2::ZERO_ZERO));      //20
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::MAGENTA, Vec2::ONE_ZERO));       //21
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::MAGENTA, Vec2::ONE_ONE));        //22
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::MAGENTA, Vec2::ZERO_ONE));       //23
 
 	const unsigned int indices[] =
 	{
-		0, 1, 2, 1, 3, 2,       // BACK
-	    4, 7, 6, 5, 7, 4,       // LEFT
-	    10, 11, 8, 8, 11, 9,    // FRONT
-	    14, 15, 12, 12, 15, 13, // RIGHT
-	    18, 19, 16, 16, 19, 17, // DOWN
-	    20, 21, 22, 20, 23, 21  // TOP
+		0, 1, 2, 2, 3, 0,       // FRONT
+	    4, 5, 6, 6, 7, 4,       // LEFT
+	    9, 8, 11, 11, 10, 9,    // BACK
+	    12, 13, 14, 14, 15, 12, // RIGHT
+	    16, 17, 18, 18, 19, 16, // DOWN
+	    20, 21, 22, 22, 23, 20  // TOP
 	};
 
-	Mesh* mesh = mb.CreateMesh<VertexPCU>(indices);
+	Mesh* mesh = mb.CreateMesh<VertexPCU>();
 	
 	SetModelBuffer(model);
 	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
-	DrawMesh(mesh);
+	DrawMeshWithIndices(mesh, indices, _countof(indices));
 
 	SAFE_DELETE_POINTER(mesh)
 }
@@ -437,21 +437,21 @@ void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Ve
 
 	mb.m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y, 0.0f), color, Vec2(0.0f, 0.0f)));   //0
 	mb.m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y,0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	mb.m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,   0.0f), color, Vec2(0.0f, 1.0f)));   //2
-	mb.m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,  0.0f), color, Vec2(1.0f, 1.0f)));   //3
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,  0.0f), color, Vec2(1.0f, 1.0f)));   //2
+	mb.m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,   0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
 	const unsigned int indices[] =
 	{
-		2, 3, 0,
-		0, 3, 1
+		0, 1, 2,
+		2, 3, 0
 	};
 
-	Mesh* mesh = mb.CreateMesh<VertexPCU>(indices);
+	Mesh* mesh = mb.CreateMesh<VertexPCU>();
 	
     SetModelBuffer(model);
 	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
-	DrawMesh(mesh);
+	DrawMeshWithIndices(mesh, indices, _countof(indices));
 
 	SAFE_DELETE_POINTER(mesh)
 }
@@ -473,21 +473,21 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 	
 	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(startLeft.m_X,  startLeft.m_Y, 0.0f), color, Vec2(0.0f, 0.0f)));   //0
 	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(startRight.m_X, startRight.m_Y,0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,   0.0f), color, Vec2(0.0f, 1.0f)));   //2
-	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,  0.0f), color, Vec2(1.0f, 1.0f)));   //3
+	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(endRight.m_X,   endRight.m_Y,  0.0f), color, Vec2(1.0f, 1.0f)));   //2
+	mb1.m_Vertices.emplace_back(VertexMaster(Vec3(endLeft.m_X,    endLeft.m_Y,   0.0f), color, Vec2(0.0f, 1.0f)));   //3
 
 	const unsigned int indices[] =
 	{
-		2, 3, 0,
-		0, 3, 1
+		0, 1, 2,
+		2, 3, 0
 	};
 
-	Mesh* mesh1 = mb1.CreateMesh<VertexPCU>(indices);
+	Mesh* mesh1 = mb1.CreateMesh<VertexPCU>();
 	
 	SetModelBuffer(model);
 	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
-	DrawMesh(mesh1);
+	DrawMeshWithIndices(mesh1, indices, _countof(indices));
 
 	SAFE_DELETE_POINTER(mesh1)
 
@@ -502,10 +502,10 @@ void Renderer::DrawArrow(Vec2& start, Vec2& end, const float& thickness, const V
 	MeshBuilder mb2 = MeshBuilder();
 
 	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(top.m_X,           top.m_Y,           0.0f), color, Vec2(0.0f, 0.0f)));   //0
-	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(bottomLeft.m_X,    bottomLeft.m_Y,    0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(bottomRight.m_X,   bottomRight.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
+	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(bottomRight.m_X,   bottomRight.m_Y,   0.0f), color, Vec2(1.0f, 1.0f)));   //1	
+	mb2.m_Vertices.emplace_back(VertexMaster(Vec3(bottomLeft.m_X,    bottomLeft.m_Y,    0.0f), color, Vec2(0.5f, 0.0f)));   //2
 
-	Mesh* mesh2 = mb2.CreateMesh<VertexPCU>();
+	Mesh* mesh2 = mb2.CreateMesh<VertexPCU>(3);
 
 	SetModelBuffer(model);
 	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
@@ -533,10 +533,10 @@ void Renderer::DrawDisc(const Vec2& center, const float& radius, const Vec4& col
 		start = Vec2(center.m_X + cosf(toRadians(startDeg)) * radius, center.m_Y + sinf(toRadians(startDeg)) * radius);
 		end = Vec2(center.m_X + cosf(toRadians(endDeg)) * radius, center.m_Y + sinf(toRadians(endDeg)) * radius);
 
-	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,   end.m_Y, 0.0f), color, Vec2(1.0f, 0.0f)));   //1
-	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,     start.m_Y,   0.0f), color, Vec2(0.5f, 1.0f)));   //2
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X, start.m_Y, 0.0f), color, Vec2(1.0f, 1.0f)));   //2
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,   end.m_Y, 0.0f), color, Vec2(0.5f, 0.0f)));   //1
 	    
-	    Mesh* mesh = mb.CreateMesh<VertexPCU>();
+	    Mesh* mesh = mb.CreateMesh<VertexPCU>(3);
  
 	    SetModelBuffer(model);
 		BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
@@ -564,14 +564,14 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 		MeshBuilder mb = MeshBuilder();
 
 	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X - (RING_THICKNESS * cosf(toRadians(startDeg))), start.m_Y - (RING_THICKNESS * sinf(toRadians(startDeg))), 0.0f), color, Vec2(0.0f, 0.0f)));   //0
-	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,  start.m_Y,  0.0f), color, Vec2(1.0f, 0.0f)));  																							              //1
-		mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(0.0f, 1.0f)));         //2
-		mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,    end.m_Y,    0.0f), color, Vec2(1.0f, 10.0f)));  																							          //3
+	    mb.m_Vertices.emplace_back(VertexMaster(Vec3(start.m_X,  start.m_Y,  0.0f), color, Vec2(1.0f, 0.0f)));  		//1
+		mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X,    end.m_Y,    0.0f), color, Vec2(1.0f, 1.0f)));  																							          //2
+		mb.m_Vertices.emplace_back(VertexMaster(Vec3(end.m_X - (RING_THICKNESS * cosf(toRadians(endDeg))), end.m_Y - (RING_THICKNESS * sinf(toRadians(endDeg))),   0.0f), color, Vec2(0.0f, 1.0f)));         //3
 
 	    const unsigned int indices[] =
 	    {
-	    	2, 3, 0,
-	    	0, 3, 1
+	    	0, 1, 2,
+		    2, 3, 0
 	    };
 
 	    Mesh* mesh = mb.CreateMesh<VertexPCU>();
@@ -579,7 +579,7 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 	    SetModelBuffer(model);
 		BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
-	    DrawMesh(mesh);
+	    DrawMeshWithIndices(mesh, indices, _countof(indices));
 
 		SAFE_DELETE_POINTER(mesh)
 	}
@@ -592,16 +592,20 @@ void Renderer::DrawMesh(Mesh* mesh)
 
 	m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	if(mesh->m_Indices % 6 == 0)
-	{
-		mesh->m_IBO->Bind();
+	m_Context->Draw(mesh->m_NumOfVertices, 0);
+}
 
-		m_Context->DrawIndexed(mesh->m_Indices, 0, 0);
-	}
-	else
-	{
-		m_Context->Draw(mesh->m_Indices, 0);
-	}
+void Renderer::DrawMeshWithIndices(Mesh* mesh, const unsigned int* indices, const int numOfIndices)
+{
+	m_Context->IASetInputLayout(mesh->m_Layout);
+	mesh->m_VBO->Bind();
+
+	m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	mesh->SetIndices(indices, numOfIndices);
+	mesh->m_IBO->Bind();
+
+	m_Context->DrawIndexed(numOfIndices, 0, 0);
 }
 
 ID3D11Device* Renderer::GetDevice() const

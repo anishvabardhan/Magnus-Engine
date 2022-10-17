@@ -13,6 +13,6 @@ constexpr char* MAGNUS_PIXEL_SHADER_VER = "ps_5_0";
 constexpr char* MAGNUS_DEFAULT_TEXTURE = "../../Data/Textures/Default.png";
 constexpr char* MAGNUS_FONT_BITMAP = "../../Data/Textures/NewFont.png";
 constexpr int NUM_OF_DISC_VERTICES = 100;
-constexpr float RING_THICKNESS = 0.05f;
+constexpr float RING_THICKNESS = 0.025f;
 
 //------------------------------------------------------------------------------------------------------------------
