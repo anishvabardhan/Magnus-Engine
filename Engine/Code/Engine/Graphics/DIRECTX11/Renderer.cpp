@@ -338,24 +338,63 @@ void Renderer::DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& 
 		Vec3(center.m_X + dimHalfX, center.m_Y + dimHalfY, center.m_Z + dimHalfZ), // 6 
 		Vec3(center.m_X - dimHalfX, center.m_Y + dimHalfY, center.m_Z + dimHalfZ)  // 7
 	};
+	
+	MeshBuilder mb = MeshBuilder();
 
-	//FRONT
-	DrawQuad3D(vertices[0], vertices[1], vertices[2], vertices[3], Color::RED, model);
+	// FRONT SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::RED, Vec2::ZERO_ZERO));          //0
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::RED, Vec2::ONE_ZERO));           //1
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::RED, Vec2::ONE_ONE));            //2
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::RED, Vec2::ZERO_ONE));           //3
+	
+	// LEFT SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::GREEN,  Vec2::ZERO_ZERO));       //4
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::GREEN,  Vec2::ONE_ZERO));        //5
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::GREEN,  Vec2::ONE_ONE));         //6
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::GREEN,  Vec2::ZERO_ONE));        //7
+	
+	// BACK SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::YELLOW, Vec2::ZERO_ZERO));       //8
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::YELLOW, Vec2::ONE_ZERO));        //9
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::YELLOW, Vec2::ONE_ONE));         //10
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::YELLOW, Vec2::ZERO_ONE));        //11
+	
+	// RIGHT SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::BLUE, Vec2::ZERO_ZERO));         //12
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::BLUE, Vec2::ONE_ZERO)); 	        //13
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::BLUE, Vec2::ONE_ONE)); 	        //14
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::BLUE, Vec2::ZERO_ONE));  		    //15
+	
+	// DOWN SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::WHITE, Vec2::ZERO_ZERO));        //16
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::WHITE, Vec2::ONE_ZERO));         //17
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::WHITE, Vec2::ONE_ONE));          //18
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::WHITE, Vec2::ZERO_ONE));         //19
+	
+	// TOP SIDE
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::MAGENTA, Vec2::ZERO_ZERO));      //20
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::MAGENTA, Vec2::ONE_ZERO));       //21
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::MAGENTA, Vec2::ONE_ONE));        //22
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::MAGENTA, Vec2::ZERO_ONE));       //23
 
-	//LEFT
-	DrawQuad3D(vertices[4], vertices[0], vertices[3], vertices[7], Color::MAGENTA, model);
+	const unsigned int indices[] =
+	{
+		0, 1, 2, 2, 3, 0,       // FRONT
+	    4, 5, 6, 6, 7, 4,       // LEFT
+	    8, 9, 10, 10, 11, 8,    // BACK
+	    12, 13, 14, 14, 15, 12, // RIGHT
+	    16, 17, 18, 18, 19, 16, // DOWN
+	    20, 21, 22, 22, 23, 20  // TOP
+	};
 
-	//BOTTOM
-	DrawQuad3D(vertices[7], vertices[6], vertices[5], vertices[4], Color::BLUE, model);
+	Mesh* mesh = mb.CreateMesh<VertexPCU>();
+	
+	SetModelBuffer(model);
+	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
 
-	//RIGHT
-	DrawQuad3D(vertices[1], vertices[5], vertices[6], vertices[2], Color::YELLOW, model);
+	DrawMeshWithIndices(mesh, indices, _countof(indices));
 
-	//TOP
-	DrawQuad3D(vertices[3], vertices[2], vertices[6], vertices[7], Color::WHITE, model);
-
-	//BOTTOM
-	DrawQuad3D(vertices[4], vertices[5], vertices[1], vertices[0], Color::GREEN, model);
+	SAFE_DELETE_POINTER(mesh)
 }
 
 void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model)

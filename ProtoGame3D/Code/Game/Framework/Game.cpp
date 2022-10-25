@@ -36,7 +36,7 @@ void Game::Update(float deltaseconds)
 	UNUSED(deltaseconds)
 		
 	x += deltaseconds;
-	m.m_Model =  Mat4::Translation(Vec3(0.0f, 0.0f, 0.0f)) * Mat4::RotationY3D(x) * Mat4::RotationX3D(0) * Mat4::RotationZ3D(0);
+	m.m_Model =  Mat4::Translation(Vec3(0.0f, 0.0f, 0.0f)) * Mat4::RotationY3D(0) * Mat4::RotationX3D(x) * Mat4::RotationZ3D(0);
 }
 
 //--------------------------------------------------------------------------------------------------
