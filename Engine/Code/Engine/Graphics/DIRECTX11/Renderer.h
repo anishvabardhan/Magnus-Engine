@@ -34,10 +34,8 @@ class Renderer
 	TextureView* m_RenderTargetView = nullptr;
 
 	ConstantBuffer m_ModelCBO;
-	ConstantBuffer m_CameraCBO;
 
 	Shader* m_Shader = nullptr;
-	Camera* m_Camera = nullptr;
 
 	Texture* m_RenderTarget = nullptr;
 	Texture* m_DefaultTexture = nullptr;
@@ -56,7 +54,6 @@ public:
 	void CreateRenderTarget(Vec2 texel);
 	void SetRenderTarget(TextureView* renderTarget);
 	void SetViewport();
-	void SetCamera();
 	void SwappingBuffers();
 	void CopyResource(Texture* source, Texture* dest = nullptr);
 
@@ -65,7 +62,6 @@ public:
 	void BindTexture(const Texture* texture = nullptr, int textureSlot = 0);
 
 	// MVP UNIFORMS UPDATION METHODS
-	void SetCameraBuffer(const ViewData& data);
 	void SetModelBuffer(const ModelData& data);
 	void BindBufferSlot(unsigned int slot, ID3D11Buffer* buffer);
 
@@ -82,6 +78,7 @@ public:
 	void DrawArrow(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 	void DrawDisc(const Vec2& center, const float& radius, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 	void DrawRing(const Vec2& center, const float& radius, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
+	void DrawQuad3D(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3, const Vec4& color, ModelData model = {Mat4::Translation(Vec3::ZERO)});
 
 	void DrawMesh(Mesh* mesh);
 	void DrawMeshWithIndices(Mesh* mesh, const unsigned int* indices, const int numOfIndices);

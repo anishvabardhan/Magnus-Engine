@@ -17,10 +17,9 @@ public:
 	Camera();
 	~Camera();
 
-	Mat4 SetOrtho(float left, float right, float bottom, float top, float nearZ, float farZ);
-	Mat4 SetPersp(float fov, float aspectRatio, float nearZ, float farZ);
+	void SetOrtho(float left, float right, float bottom, float top, float nearZ, float farZ);
+	void SetPersp(float fov, float aspectRatio, float nearZ, float farZ);
 
-	void Update(float deltaseconds);
 	void Setup();
 
 	Mat4 GetProjection() const;

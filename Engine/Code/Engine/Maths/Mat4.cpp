@@ -342,7 +342,7 @@ Mat4 Mat4::RotationZ3D(float rotateZ)
 
 Mat4 Mat4::Rotation3D(float x, float y, float z)
 {
-	return RotationZ3D(z) * RotationX3D(x) * RotationY3D(y);
+	return RotationY3D(y) * RotationX3D(x) * RotationZ3D(z);
 }
 
 Mat4 Mat4::Scale(const Vec3& scale)

@@ -37,17 +37,9 @@ void Renderer::StartUp()
 	SetViewport();
 
 	m_Shader = new Shader();
-
-	m_Camera = new Camera();
-	m_Camera->SetPosition(Vec3(0.0f, 0.0f, -25.0f));
-	m_Camera->SetPersp(90.0f, MAGNUS_WINDOW_DIMS[1] / MAGNUS_WINDOW_DIMS[3], 0.1f, 100.0f);
-
 	m_ModelCBO.Init(sizeof(ModelData));
-	m_CameraCBO.Init(sizeof(ViewData));
 
-	m_DefaultTexture = GetOrCreateTexture(MAGNUS_DEFAULT_TEXTURE);
-
-	BindBufferSlot(CBO_VIEW_SLOT, m_CameraCBO.GetBuffer());
+	m_DefaultTexture = GetOrCreateTexture(MAGNUS_DEFAULT_TEXTURE);  
 
 	m_DefaultTexture->Bind(0);
 	m_DefaultSampler->Bind(0);
@@ -59,20 +51,10 @@ void Renderer::ShutDown()
 	SAFE_RELEASE(m_Context)
 
 	SAFE_DELETE_POINTER(m_Shader)
-	SAFE_DELETE_POINTER(m_Camera)
 	SAFE_DELETE_POINTER(m_RenderTarget)
 	SAFE_DELETE_POINTER(m_SwapChain)
 	SAFE_DELETE_POINTER(m_DefaultTexture)
 	SAFE_DELETE_POINTER(m_DefaultSampler)
-}
-
-void Renderer::SetCamera()
-{
-	ViewData cameraData;
-	cameraData.m_Projection = m_Camera->GetProjection();
-	cameraData.m_View = m_Camera->GetView();
-	
-	SetCameraBuffer(cameraData);
 }
 
 void Renderer::CopyResource(Texture* source, Texture* dest)
@@ -146,10 +128,10 @@ void Renderer::CreateDeviceAndSwapChain()
 #endif
 	
 	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
-	depthDesc.DepthEnable = false;
-
+	depthDesc.DepthEnable = true;
+	
 	ID3D11DepthStencilState* DepthState = nullptr;
-
+	
 	m_Device->CreateDepthStencilState(&depthDesc, &DepthState);
 	m_Context->OMSetDepthStencilState(DepthState, 1);
 
@@ -231,11 +213,6 @@ void Renderer::BindFont(const Font* font, int textureSlot)
 void Renderer::BindTexture(const Texture* texture, int textureSlot)
 {
 	
-}
-
-void Renderer::SetCameraBuffer(const ViewData& data)
-{
-	m_CameraCBO.CopyToGPU(&data);
 }
 
 void Renderer::SetModelBuffer(const ModelData& data)
@@ -347,8 +324,6 @@ void Renderer::DrawHollowAABB2(const AABB2& aabb2, const float& thickness, const
 
 void Renderer::DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& color, ModelData model)
 {
-	MeshBuilder mb = MeshBuilder();
-
 	float dimHalfX = dimensions.m_X * 0.5f;
 	float dimHalfY = dimensions.m_Y * 0.5f;
 	float dimHalfZ = dimensions.m_Z * 0.5f;
@@ -364,60 +339,23 @@ void Renderer::DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& 
 		Vec3(center.m_X - dimHalfX, center.m_Y + dimHalfY, center.m_Z + dimHalfZ)  // 7
 	};
 
-	// FRONT SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::RED, Vec2::ZERO_ZERO));          //0
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::RED, Vec2::ONE_ZERO));           //1
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::RED, Vec2::ONE_ONE));            //2
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::RED, Vec2::ZERO_ONE));           //3
-	
-	// RIGHT SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::GREEN,  Vec2::ZERO_ZERO));       //4
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::GREEN,  Vec2::ONE_ZERO));        //5
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::GREEN,  Vec2::ONE_ONE));         //6
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::GREEN,  Vec2::ZERO_ONE));        //7
-	
-	// BACK SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::YELLOW, Vec2::ZERO_ZERO));       //8
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::YELLOW, Vec2::ONE_ZERO));        //9
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::YELLOW, Vec2::ONE_ONE));         //10
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::YELLOW, Vec2::ZERO_ONE));        //11
-	
-	// RIGHT SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::BLUE, Vec2::ZERO_ZERO));         //12
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::BLUE, Vec2::ONE_ZERO)); 	     //13
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::BLUE, Vec2::ONE_ONE)); 	         //14
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::BLUE, Vec2::ZERO_ONE));  		 //15
-	
-	// DOWN SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[0], Color::WHITE, Vec2::ZERO_ZERO));        //16
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::WHITE, Vec2::ONE_ZERO));         //17
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::WHITE, Vec2::ONE_ONE));          //18
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::WHITE, Vec2::ZERO_ONE));         //19
-	
-	// TOP SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[3], Color::MAGENTA, Vec2::ZERO_ZERO));      //20
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[2], Color::MAGENTA, Vec2::ONE_ZERO));       //21
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::MAGENTA, Vec2::ONE_ONE));        //22
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::MAGENTA, Vec2::ZERO_ONE));       //23
+	//FRONT
+	DrawQuad3D(vertices[0], vertices[1], vertices[2], vertices[3], Color::RED, model);
 
-	const unsigned int indices[] =
-	{
-		0, 1, 2, 2, 3, 0,       // FRONT
-	    4, 5, 6, 6, 7, 4,       // LEFT
-	    9, 8, 11, 11, 10, 9,    // BACK
-	    12, 13, 14, 14, 15, 12, // RIGHT
-	    16, 17, 18, 18, 19, 16, // DOWN
-	    20, 21, 22, 22, 23, 20  // TOP
-	};
+	//LEFT
+	DrawQuad3D(vertices[4], vertices[0], vertices[3], vertices[7], Color::MAGENTA, model);
 
-	Mesh* mesh = mb.CreateMesh<VertexPCU>();
-	
-	SetModelBuffer(model);
-	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
+	//BOTTOM
+	DrawQuad3D(vertices[7], vertices[6], vertices[5], vertices[4], Color::BLUE, model);
 
-	DrawMeshWithIndices(mesh, indices, _countof(indices));
+	//RIGHT
+	DrawQuad3D(vertices[1], vertices[5], vertices[6], vertices[2], Color::YELLOW, model);
 
-	SAFE_DELETE_POINTER(mesh)
+	//TOP
+	DrawQuad3D(vertices[3], vertices[2], vertices[6], vertices[7], Color::WHITE, model);
+
+	//BOTTOM
+	DrawQuad3D(vertices[4], vertices[5], vertices[1], vertices[0], Color::GREEN, model);
 }
 
 void Renderer::DrawLine(Vec2& start, Vec2& end, const float& thickness, const Vec4& color, ModelData model)
@@ -583,6 +521,31 @@ void Renderer::DrawRing(const Vec2& center, const float& radius, const Vec4& col
 
 		SAFE_DELETE_POINTER(mesh)
 	}
+}
+
+void Renderer::DrawQuad3D(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3, const Vec4& color, ModelData model)
+{
+	MeshBuilder mb = MeshBuilder();
+
+	mb.m_Vertices.emplace_back(VertexMaster(p0, color, Vec2(0.0f, 0.0f))); //0
+	mb.m_Vertices.emplace_back(VertexMaster(p1, color, Vec2(1.0f, 0.0f))); //1
+	mb.m_Vertices.emplace_back(VertexMaster(p2, color, Vec2(1.0f, 1.0f))); //2
+	mb.m_Vertices.emplace_back(VertexMaster(p3, color, Vec2(0.0f, 1.0f))); //3
+
+	const unsigned int indices[] =
+	{
+		0, 1, 2,
+		2, 3, 0
+	};
+
+	Mesh* mesh = mb.CreateMesh<VertexPCU>();
+	
+	SetModelBuffer(model);
+	BindBufferSlot(CBO_MODEL_SLOT, m_ModelCBO.GetBuffer());
+
+	DrawMeshWithIndices(mesh, indices, _countof(indices));
+
+	SAFE_DELETE_POINTER(mesh)
 }
 
 void Renderer::DrawMesh(Mesh* mesh)
