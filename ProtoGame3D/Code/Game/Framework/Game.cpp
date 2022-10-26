@@ -14,7 +14,7 @@ Game::Game()
 
 	m_Camera = new Camera();
 	m_Camera->SetPosition(Vec3(0.0f, 0.0f, -50.0f));
-	m_Camera->SetPersp(45.0f, MAGNUS_WINDOW_DIMS[1] / MAGNUS_WINDOW_DIMS[3], 0.1f, 100.0f);
+	m_Camera->SetPersp(90.0f, MAGNUS_WINDOW_DIMS[1] / MAGNUS_WINDOW_DIMS[3], 0.1f, 100.0f);
 }
 
 Game::~Game()
@@ -36,7 +36,7 @@ void Game::Update(float deltaseconds)
 	UNUSED(deltaseconds)
 		
 	x += deltaseconds;
-	m.m_Model =  Mat4::Translation(Vec3(0.0f, 0.0f, 0.0f)) * Mat4::RotationY3D(0) * Mat4::RotationX3D(x) * Mat4::RotationZ3D(0);
+	m.m_Model =  Mat4::Translation(Vec3(0.0f, 0.0f, 0.0f)) * Mat4::RotationY3D(x) * Mat4::RotationX3D(0) * Mat4::RotationZ3D(0);
 }
 
 //--------------------------------------------------------------------------------------------------

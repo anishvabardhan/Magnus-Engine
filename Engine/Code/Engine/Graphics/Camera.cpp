@@ -19,6 +19,8 @@ Camera::~Camera()
 void Camera::SetOrtho(float left, float right, float bottom, float top, float nearZ, float farZ)
 {
 	m_Projection = Mat4::Orthographic(left, right, bottom, top, nearZ, farZ);
+
+	Setup();
 }
 
 void Camera::SetPersp(float fov, float aspectRatio, float nearZ, float farZ)
