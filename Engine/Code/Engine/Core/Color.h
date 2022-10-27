@@ -12,5 +12,6 @@ namespace Color
     constexpr Vec4 CYAN        = Vec4(0.0f, 1.0f, 1.0f, 1.0f);
     constexpr Vec4 MAGENTA     = Vec4(1.0f, 0.0f, 1.0f, 1.0f);
     constexpr Vec4 YELLOW      = Vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	constexpr Vec4 WHITE       = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    constexpr Vec4 ORANGE      = Vec4(1.0f,0.65f, 0.0f, 1.0f);
+	constexpr Vec4 WHITE       = Vec4(1.0f, 1.0f, 1.0f, 1.0f); 
 }

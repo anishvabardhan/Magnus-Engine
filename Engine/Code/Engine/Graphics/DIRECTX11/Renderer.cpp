@@ -354,10 +354,10 @@ void Renderer::DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& 
 	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::GREEN,  Vec2::ZERO_ONE));        //7
 	
 	// BACK SIDE
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::YELLOW, Vec2::ZERO_ZERO));       //8
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::YELLOW, Vec2::ONE_ZERO));        //9
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::YELLOW, Vec2::ONE_ONE));         //10
-	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::YELLOW, Vec2::ZERO_ONE));        //11
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[5], Color::YELLOW, Vec2::ZERO_ZERO));       //8
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[4], Color::YELLOW, Vec2::ONE_ZERO));        //9
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[7], Color::YELLOW, Vec2::ONE_ONE));         //10
+	mb.m_Vertices.emplace_back(VertexMaster(vertices[6], Color::YELLOW, Vec2::ZERO_ONE));        //11
 	
 	// RIGHT SIDE
 	mb.m_Vertices.emplace_back(VertexMaster(vertices[1], Color::BLUE, Vec2::ZERO_ZERO));         //12
@@ -381,7 +381,7 @@ void Renderer::DrawCube(const Vec3& center, const Vec3& dimensions, const Vec4& 
 	{
 		0, 1, 2, 2, 3, 0,       // FRONT
 	    4, 5, 6, 6, 7, 4,       // LEFT
-	    9, 8, 11, 11, 10, 9,    // BACK
+	    8, 9, 10, 10, 11, 8,    // BACK
 	    12, 13, 14, 14, 15, 12, // RIGHT
 	    16, 17, 18, 18, 19, 16, // DOWN
 	    20, 21, 22, 22, 23, 20  // TOP
